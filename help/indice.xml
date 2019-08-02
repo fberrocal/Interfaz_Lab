@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1'  ?>
+<!DOCTYPE index
+  PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Index Version 1.0//EN"
+         "http://java.sun.com/products/javahelp/index_1_0.dtd">
+<index version="1.0">
+        <indexitem text="Manual de Usuario"    target="aplicacion"/>
+		<indexitem text="Pantalla de inicio"    target="pantalla_inicio"/>	
+        <indexitem text="Tabla de datos Agilis"    target="tabla_agilis"/>
+        <indexitem text="Tabla de datos Winsislab"    target="tabla_winsislab"/>
+		<indexitem text="Pantalla de homologación de Examenes"    target="pant_homologacion"/>
+		<indexitem text="Formulario de homologación"    target="form_homologacion"/>
+		<indexitem text="Formulario agregar idalterna"    target="form_agregar_idalterna"/>
+		<indexitem text="Cierre de la Aplicación"    target="cierre_app"/>
+		
+		<indexitem text="Formulario de Configuración de datos de conexión"    target="form_configuracion"/>
+		<indexitem text="Formulario de cambio de contraseña"    target="form_cambio_contrasena"/>
+		
+</index>

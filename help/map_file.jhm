@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE map
+PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Map Version 2.0//EN"
+"http://java.sun.com/products/javahelp/map_2_0.dtd">
+<map version="1.0">
+   <mapID target="aplicacion" url="html/PRINCIPAL.htm" />
+   
+   <mapID target="pantalla_inicio" url="html/Pantalla de inicio.htm" />
+   
+   <mapID target="tabla_agilis" url="html/TABLA DE DATOS Agilis.htm" />
+   
+   <mapID target="tabla_winsislab" url="html/TABAL DE DATOS WINSISLAB.htm" />
+   
+   <mapID target="pant_homologacion" url="html/PANTALLA DE HOMOLOGACION DE EXAMENES.htm" />
+   
+   <mapID target="form_homologacion" url="html/Formulario de Homologacion de Examenes.htm" />
+   
+   <mapID target="form_agregar_idalterna" url="html/Formato Agregar ID Alterna.htm" />
+   
+   <mapID target="cierre_app" url="html/CIERRE DE LA APLICACION INTERFAZ DE INTERCAMBIO DE INFORMACION AGILIS WINSISLAB.htm" />
+   
+   
+   
+   <mapID target="form_configuracion" url="html/CONGIF.htm" />
+   
+   <mapID target="form_cambio_contrasena" url="html/CAMBIOCON.htm" />
+</map>

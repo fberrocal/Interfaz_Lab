@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<toc version="1.0"> <!--  categoryclosedimage="FolderClosed" categoryopenimage="FolderOpened"  
+topicimage="ItemIco"-->
+		<tocitem text="Manual de Usuario"    target="aplicacion">
+        <tocitem text="Pantalla de inicio"    target="pantalla_inicio"/>
+        <tocitem text="Tabla de datos Agilis"    target="tabla_agilis"/>
+		<tocitem text="Tabla de datos Winsislab"    target="tabla_winsislab"/>
+		<tocitem text="Pantalla de homologación de Examenes"    target="pant_homologacion"/>
+		<tocitem text="Formulario de homologación"    target="form_homologacion"/>
+		<tocitem text="Formulario agregar idalterna"    target="form_agregar_idalterna"/>
+		<tocitem text="Cierre de la Aplicación"    target="cierre_app"/>
+		
+		<tocitem text="Formulario de Configuración de datos de conexión"    target="form_configuracion"/>
+		<tocitem text="Formulario de cambio de contraseña"    target="form_cambio_contrasena"/>
+		
+        </tocitem>
+</toc>
