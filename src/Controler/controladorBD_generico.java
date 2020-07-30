@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -334,6 +336,51 @@ public class controladorBD_generico {
             JOptionPane.showMessageDialog(null, "M6. Homo_Exa_ImatDao:\n" + ex.toString());
         }
         return modeloLista;
+    }
+    
+    public ArrayList getLabscontrolados(Connection con, String tabla, String campo) {
+        boolean res       = false;
+        int cantFilas     = 0;  // Cantidad de Filas encontradas
+        ArrayList codigos = new ArrayList();
+        
+        try {
+
+            cantFilas = contarCodReg(con, tabla, campo);
+            // JOptionPane.showMessageDialog(null, cantFilas);
+            
+            if (cantFilas > 0) {
+                res = true;
+                rs = con.createStatement().executeQuery("SELECT CODIGO FROM TGEN WHERE TGEN.TABLA='"+tabla+"' AND TGEN.CAMPO='"+campo+"'");
+                while (rs.next()) {
+                    codigos.add(rs.getString("CODIGO"));
+                }
+            }
+            
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Ocurrio un error al consultar la \ntabla Tgen de la Bd Clintos 1:\n" + ex.toString());
+        }
+        return codigos;
+    }
+    
+    /**
+     * Cuenta el número de registros en la tabla TGEN de Codigos controlados
+     * @param con
+     * @param tabla
+     * @param campo
+     * @return 
+     */
+    public int contarCodReg(Connection con, String tabla, String campo) {
+        int count = 0;
+
+        try {
+            this.aux  = con.createStatement().executeQuery("SELECT COUNT(*) AS CANTIDAD FROM TGEN WHERE TGEN.TABLA='"+tabla+"' AND TGEN.CAMPO='"+campo+"'");
+            while (aux.next()) {
+                count = aux.getInt("CANTIDAD");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Ocurrio un error al consultar la \ntabla Tgen de la Bd Clintos 2:\n" + ex.toString());
+        }
+        return count;
     }
 
 }

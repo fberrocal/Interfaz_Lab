@@ -254,5 +254,26 @@ public class SedesDao {
 
         return (List) searchResults;
     }
+    
+    /**
+     * Desc: Devuelve la id de la sede configurada en Winsislab
+     * Dev: FMBM - 18/01/2020
+     * @param valueObject  
+     */
+    
+    public void getSede(Sedes valueObject) throws NotFoundException, SQLException {
+ 
+        String sql = "SELECT * FROM sedes LIMIT 1";
+        PreparedStatement stmt = null;
+            
+        try {
+            stmt = conn.prepareStatement(sql);
+            singleQuery(stmt, valueObject);
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+        }
+    }
 
 }

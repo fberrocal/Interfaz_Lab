@@ -18,35 +18,35 @@ public class LABO_ORD implements Cloneable, Serializable {
      * variables de persistencia. represetnas las columnas de la tabla LABO_ORD.
      */
     private int ID;
-    private String NOADMISION;
-    private String NUM_ORDEN;
-    private Timestamp FECHA_RESULTADO;
-    private String TIPO_DOC;
-    private String DOCUMENTO;
-    private String APELLIDO1;
-    private String APELLIDO2;
-    private String NOMBRE1;
-    private String NOMBRE2;
-    private String SEXO;
+    private String NOADMISION;          
+    private String NUM_ORDEN;           
+    private Timestamp FECHA_RESULTADO;  
+    private String TIPO_DOC;            
+    private String DOCUMENTO;           // <-- This value needs to be validated
+    private String APELLIDO1;           // <-- This value needs to be validated
+    private String APELLIDO2;           // <-- This value needs to be validated
+    private String NOMBRE1;             // <-- This value needs to be validated
+    private String NOMBRE2;             // <-- This value needs to be validated
+    private String SEXO;                // <-- Check this field
     private Timestamp FECHANAC;
-    private String DIRECCION;
-    private String TELEFONO;
-    private String COD_CIUDAD;
-    private String COD_ZONA;
-    private String CELULAR;
-    private String EMAIL;
-    private String COD_EXAMEN;
+    private String DIRECCION;           // <-- This value needs to be validated
+    private String TELEFONO;            // <-- This value needs to be validated
+    private String COD_CIUDAD;          
+    private String COD_ZONA;    
+    private String CELULAR;             // <-- This value needs to be validated
+    private String EMAIL;               
+    private String COD_EXAMEN;          
     private String NOM_EXAMEN;
-    private int CANTIDAD;
-    private int NUM_PETICION;
-    private String PISO;
+    private int CANTIDAD;               // <-- This value needs to be validated
+    private int NUM_PETICION;           
+    private String PISO;                
     private int EN_EMBARAZO;
     private String TIPO_USUARIO;
     private String TIPOSER;
     private String COD_MEDICO;
-    private String NOM_MEDICO;
-    private String COD_CLIENTE;
-    private String NOM_CLIENTE;
+    private String NOM_MEDICO;          // <-- This value needs to be validated    
+    private String COD_CLIENTE;         
+    private String NOM_CLIENTE;         // <-- This value needs to be validated
     private String COD_CENCOS;
     private String NOM_CENCOS;
     private String COD_SEDE;
@@ -393,5 +393,65 @@ public class LABO_ORD implements Cloneable, Serializable {
                 + ", NOM_MEDICO=" + NOM_MEDICO + ", COD_CLIENTE=" + COD_CLIENTE + ", NOM_CLIENTE=" + NOM_CLIENTE + ", COD_CENCOS=" + COD_CENCOS
                 + ", NOM_CENCOS=" + NOM_CENCOS + ", COD_SEDE=" + COD_SEDE + ", ESTADO=" + ESTADO + '}';
     }
-
+    
+    // [07/03/2020] Dev. FMBM
+    // Se implemanta para crear copias de la orden
+    // Problema de que se multiplican los exámenes de la orden en la BD Winsislab 
+    // cuando la cantidad es mayor que 1
+    
+    public LABO_ORD clonar() {
+        LABO_ORD clon = new LABO_ORD();
+        
+        clon.setID(this.ID);
+        clon.setNOADMISION(this.NOADMISION);
+        clon.setNUM_ORDEN(this.NUM_ORDEN);
+        clon.setFECHA_RESULTADO(this.FECHA_RESULTADO);
+        clon.setTIPO_DOC(this.TIPO_DOC);
+        clon.setDOCUMENTO(this.DOCUMENTO);
+        clon.setAPELLIDO1(this.APELLIDO1);
+        clon.setAPELLIDO2(this.APELLIDO2);
+        clon.setNOMBRE1(this.NOMBRE1);
+        clon.setNOMBRE2(this.NOMBRE2);
+        clon.setSEXO(this.SEXO);
+        clon.setFECHANAC(this.FECHANAC);
+        clon.setDIRECCION(this.DIRECCION);
+        clon.setTELEFONO(this.TELEFONO);
+        clon.setCOD_CIUDAD(this.COD_CIUDAD);
+        clon.setCOD_ZONA(this.COD_ZONA);
+        clon.setCELULAR(this.CELULAR);
+        clon.setEMAIL(this.EMAIL);
+        clon.setCOD_EXAMEN(this.COD_EXAMEN);
+        clon.setNOM_EXAMEN(this.NOM_EXAMEN);
+        clon.setCANTIDAD(this.CANTIDAD);
+        clon.setNUM_PETICION(this.NUM_PETICION);
+        clon.setPISO(this.PISO);
+        clon.setEN_EMBARAZO(this.EN_EMBARAZO);
+        clon.setTIPO_USUARIO(this.TIPO_USUARIO);
+        clon.setTIPOSER(this.TIPOSER);
+        clon.setCOD_MEDICO(this.COD_MEDICO);
+        clon.setNOM_MEDICO(this.NOM_MEDICO);
+        clon.setCOD_CLIENTE(this.COD_CLIENTE);
+        clon.setNOM_CLIENTE(this.NOM_CLIENTE);
+        clon.setCOD_CENCOS(this.COD_CENCOS);
+        clon.setNOM_CENCOS(this.NOM_CENCOS);
+        clon.setCOD_SEDE(this.COD_SEDE);
+        clon.setESTADO(this.ESTADO);
+        
+        return clon;
+    }
+    
+    // [13/07/2020] Dev. FMBM
+    // Se implemanta para limpiar los campos de caracteres especiales
+    public void cleanFields() {
+        this.DOCUMENTO   = this.DOCUMENTO.replace("[^A-Za-z0-9]", "");
+        this.APELLIDO1   = this.APELLIDO1.replace("[^A-Za-z0-9]", "");
+        this.APELLIDO2   = this.APELLIDO2.replace("[^A-Za-z0-9]", "");
+        this.NOMBRE1     = this.NOMBRE1.replace("[^A-Za-z0-9]", "");
+        this.NOMBRE2     = this.NOMBRE2.replace("[^A-Za-z0-9]", "");
+        this.DIRECCION   = this.DIRECCION.replace("[^A-Za-z0-9]", "");
+        this.TELEFONO    = this.TELEFONO.replace("[^A-Za-z0-9]", "");
+        this.CELULAR     = this.CELULAR.replace("[^A-Za-z0-9]", "");
+        this.NOM_MEDICO  = this.NOM_MEDICO.replace("[^A-Za-z0-9]", "");
+        this.NOM_CLIENTE = this.NOM_CLIENTE.replace("[^A-Za-z0-9]", "");
+    }
 }

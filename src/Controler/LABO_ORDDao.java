@@ -628,5 +628,32 @@ public class LABO_ORDDao {
         }
         return null;
     }
+    
+    // Retorna NUM_PETICION mayor de la orden de laboratorio
+    public int getMayPeticion(String num_orden) {
+        String sql = "SELECT MAX(NUM_PETICION) AS CANT FROM LABO_ORD WHERE NUM_ORDEN=?";
+        PreparedStatement stmt = null;
+        ResultSet rs;
+        try {
+            stmt = this.conn.prepareStatement(sql);
+            stmt.setString(1, num_orden);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("CANT");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Ocurrio un error al consultar la \ntabla Ciudades de la Bd Winsislab:\n" + ex.toString());
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    //rs.close();
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, "Error al intentar cerrar\nel Statement de la tabla numeros_nousados:\n" + ex.toString());
+                }
+            }
+        }
+        return 0;
+    }
 
 }

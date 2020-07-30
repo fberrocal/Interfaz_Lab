@@ -39,7 +39,7 @@ import view.Prueba1;
  */
 public class Prototipo_servicio_Agilis implements Runnable {
                                                                                     //    Properties prop = new Properties();       //    File ruta = new File("etc/config.properties");                                      
-    SimpleDateFormat dtf = new SimpleDateFormat("yyyy-MM-dd");                      // <-- Formato de fecha para PostgreSQL Ex: 2016-01-21
+    SimpleDateFormat dtf  = new SimpleDateFormat("yyyy-MM-dd");                      // <-- Formato de fecha para PostgreSQL Ex: 2016-01-21
     SimpleDateFormat dtf1 = new SimpleDateFormat("yyyy-dd-MM");                     // <-- Formato de fecha para SQL Server Ex: 2016-21-01
     public boolean centinela = true;                                                // <-- Variable de control de hilo
     public boolean llave;
@@ -51,6 +51,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
     Conexion cagilis, cwinsislab;                                                   // <-- Conexiones a las bases de datos Agilis y Winsislab
     LABO_ORDDao gLabo_ord;
     LABO_ORD labo_ord;
+    LABO_ORD copia_lab;
     PacodbcDao gPacodbc;
     Pacodbc p;
     Homo_exa_imatDao hei;
@@ -81,11 +82,17 @@ public class Prototipo_servicio_Agilis implements Runnable {
     int dif_en_dias, rest, meses, edad;
     String medida_edad;
     String cod_medico, nom_medico, docPaciente, piso;
+    String codSede;
     ReproductorAlarma ra;
     long consecutivo,prefijo;
     int diasLab;                                                                    // <-- Esta parte es nueva se usa para parametrizar la busqueda de laboratorios en cero
     DefaultTableModel tabLab;
-
+    int fac;
+    int factor1;
+    int cantidadExa;
+    int n_peticion;
+    int v_ctrl;
+    
     String procede;
     
     @Override
@@ -128,7 +135,8 @@ public class Prototipo_servicio_Agilis implements Runnable {
         paraEnviar = new ArrayList();
         SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
         cal = Calendar.getInstance();
-
+        fac = factor1 = 0;
+        
         while (centinela) {                                                                                 // <-- CICLO INFINITO DE EJECUCION DE LA INTERFAZ (HILO DE PROCESO)
             try {
                 try {
@@ -149,8 +157,24 @@ public class Prototipo_servicio_Agilis implements Runnable {
                     
                     i = gLabo_ord.ordenesNoProcesadas("SELECT * FROM LABO_ORD WHERE ESTADO=0 AND FECHA_RESULTADO > '" + fechaListado() + " 00:00:00.000' ORDER BY ID ASC").iterator();
                     
+                    // Se obtiene el número de la sede configurada en el sistema Winsislab ----------------------------------
+//                    try {
+//                        gSedes.setConn(cwinsislab.getCon());
+//                        // [18/01/2020] Nuevo código para obtener el número de la sede.  codigo anterior (sedes = gSedes.getObject("60"))
+//                        sedes = new Sedes();
+//                        gSedes.getSede(sedes);                                              
+//                        codSede = sedes.getSede_codigo();
+//                    } catch (NotFoundException ex) {
+//                            Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, "Error el codigo de sede no existe " + ex.toString(), ex);
+//                            // System.out.println("Error: el código de sede no existe:\n" + ex.getMessage());
+//                            JOptionPane.showMessageDialog(null,"Error: el código de sede no existe:\n" + ex.getMessage());
+//                    } catch (SQLException ex) {
+//                        Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, null, ex);
+//                        JOptionPane.showMessageDialog(null,"Error: SQL Exception:\n" + ex.getMessage());
+//                    }
+                    // ----------------------------------------------------------------------------------------------------
+                    
                     if (i.hasNext()) {                                                                                              // <-- ¿Existen registros nuevos sin enviar en LABO_ORD (DB Agilis)?
-                        // JOptionPane.showMessageDialog(null, "Hola");
                         while (i.hasNext()) {
                             if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {                                    // <-- SE REVISAN LAS CONEXIONES Y SE REESTABLECEN EN CASO DE EXIXTIR ERRORES
                                 infoConn.datosConexionWinsislab();
@@ -164,10 +188,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             }
                             labo_ord = (LABO_ORD) i.next();
                             hei.setConn(cwinsislab.getCon());                                                                       // <-- Conexion a Winsislab
-
-                            if (hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()).equals("")) {                                        // <-- SE VERIFICA QUE LOS LABORATORIOS ESTEN DEBIDAMENTE HOMOLOGADOS
+                                
+                            if ( String.valueOf( hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()) ).equals("")) {                                        // <-- SE VERIFICA QUE LOS LABORATORIOS ESTEN DEBIDAMENTE HOMOLOGADOS
                                 actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
-                            } else if (hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()).equals("")) {
+                            } else if ( String.valueOf( hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()) ).equals("")) {
                                 actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
                             } else if (!(hei.existeIdWinsislab(hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN())))) {
                                 actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
@@ -183,13 +207,35 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         System.out.print("Error al intentar actualizar la tabla LABO_ORD\n" + ex.toString());
                                     }
                                 } else {
-                                    paraEnviar.add(labo_ord);                                                                       // <-- SI NO FUE TRASLADADO SE ADICIONA A LA LISTA DE REGISTROS QUE SERA ENVIADA WINSISLAB
+                        
+                                    fac         = 0;
+                                    v_ctrl      = 0;
+                                    cantidadExa = labo_ord.getCANTIDAD();
+                                    factor1     = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
+                                    // n_peticion  = labo_ord.getNUM_PETICION();
+                                    
+                                    while(v_ctrl < cantidadExa){   
+                                        // for(int vc=0; vc < cantidadExa; vc++) {
+                                        // System.out.println("v_ctrl = " + v_ctrl + " Cantidad=" + cantidadExa + "Ciclo 2");
+                                        if(fac == 0) {
+                                            paraEnviar.add(labo_ord);
+                                        } else {
+                                            copia_lab = labo_ord.clonar();
+                                            copia_lab.setNUM_PETICION(factor1+1);
+                                            paraEnviar.add(copia_lab);
+                                            factor1 = factor1 + 1;
+                                        }
+                                        fac = fac + 1;
+                                        v_ctrl = v_ctrl + 1;
+                                    }
+                                    v_ctrl = 0;
+                                    // paraEnviar.add(labo_ord);                     // <-- SI NO FUE TRASLADADO SE ADICIONA A LA LISTA DE REGISTROS QUE SERA ENVIADA WINSISLAB
                                 }
                             }
                         }
-                        presionarBoton();                                                                   // <-- Se actualiza la tabla de laboratorios no Homologados
-                        
+                        // presionarBoton();                                                                   // <-- Se actualiza la tabla de laboratorios no Homologados
                         if (paraEnviar.size() > 0) {                                                        // <-- MIENTRAS HAYAN REGISTROS PARA ENVIAR
+                            
                             i = paraEnviar.iterator();
                             while (i.hasNext()) {                                                           // <-- PORCEDIMIENTO PARA ENVIAR REGISTROS DE LABO_ORD A WINSISLAB
                                 if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {        // <-- SE VERIFICAN LAS CONEXIONES EXISTENTES Y SE REESTABLECEN EN CASO DE EXISTIR PROBLEMAS
@@ -203,32 +249,45 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                             infoConn.getUs(), infoConn.getPas());
                                 }
                                 labo_ord = (LABO_ORD) i.next();
+                                labo_ord.cleanFields(); // NUEVA LINEA PARA LIMPIAR LOS CAMPOS ANTES DE ENVIAR A POSTGRESQL
                                 docPaciente = cortaCadena( labo_ord.getDOCUMENTO() );                       // <-- Se quitan los espacios de la cadena original para que se almacene correctamente en la base de datos WINSISLAB
                                 gPacodbc.setConn(cwinsislab.getCon());
+                                
+                                // SE CORTA DE ACA EL CODIGO PARA OBTENER LA SEDE Y SE PASA A ANTES DE INCIAR EL CICLO REPETITIVO
                                 if (!(gPacodbc.fueTrasladada(labo_ord.getNUM_ORDEN()))) {
-                                    if (labo_ord.getPISO().length() > 10) {                                 //SE TOMAN LOS DATOS sede_codigo,prefor,orden,preo1,langel_actual DE LA TABLA SEDES (DB Winsislab) CUANDO EL CAMPO sede_codigo SEA '40'
+                                    
+                                    gLabo_ord.setConn(cagilis.getCon());
+                                    // factor1 = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
+                                    
+                                    if (labo_ord.getPISO().length() > 10) {                                 //SE TOMAN LOS DATOS sede_codigo,prefor,orden,preo1,langel_actual DE LA TABLA SEDES (DB Winsislab) CUANDO EL CAMPO sede_codigo SEA '60'
                                         piso = (labo_ord.getPISO().substring(0, 9));                        ///Este paso se realiza siempre que la cadena de piso supere los 10 caracteres
                                     }
+                                    
                                     try {
                                         gSedes.setConn(cwinsislab.getCon());
-                                        sedes = gSedes.getObject("40");
+                                       // 18/01/2019 Nuevo código para obtener el número de la sede
+                                        sedes = new Sedes();
+                                        gSedes.getSede(sedes);                                              // sedes = gSedes.getObject("60");
+                                        codSede = sedes.getSede_codigo();
                                     } catch (NotFoundException ex) {
                                         Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, "Error el codigo de sede no existe " + ex.toString(), ex);
                                         System.out.println("Error: el código de sede no existe:\n" + ex.getMessage());
                                     }
-
+                                    
+                                    // Se actualiza el consecutivo de winsislab
                                     consecutivo = sedes.getOrden();
                                     consecutivo++;
-                                    sedes.setOrden(consecutivo);                                            // <-- SE INCREMENTA EL CONSECUTIVO DE LAS ORDENES Y SE ACTUALIZA EN LA TABLA SEDES (DB WINSISLAB) CUANDO EL CÓDIGO SEA 40
+                                    sedes.setOrden(consecutivo);                                            // <-- SE INCREMENTA EL CONSECUTIVO DE LAS ORDENES Y SE ACTUALIZA EN LA TABLA SEDES (DB WINSISLAB) CUANDO EL CÓDIGO SEA 60
                                     try {
                                         gSedes.setConn(cwinsislab.getCon());
-                                        gSedes.save(sedes);
+                                        gSedes.save(sedes); // <-- El sistema actualiza la base de datos
                                     } catch (NotFoundException ex) {
                                         Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, "Error al intentar actualizar el consecutivo de la sede:\n" + ex.toString(), ex);
                                         System.out.println("Error al intentar actualizar el consecutivo de la sede:\n" + ex.getMessage());
                                     }
-
-                                    prefijo = (Integer.parseInt( sedes.getPrefor() ) * 1000000 ) + consecutivo;                     // <-- Se armar el consecutivo del paciente a ingresar a DB WINSISLAB (paciente_cod)
+                                    
+                                    // Se armar el consecutivo del paciente a ingresar a DB WINSISLAB (paciente_cod):
+                                    prefijo = (Integer.parseInt( sedes.getPrefor() ) * 1000000 ) + consecutivo;                     
                                     
                                     if ((consecutivo / 10000) < 10) {
                                         consecutivo_orden = String.valueOf(prefijo); //sedes.getPrefor() + "0" + consecutivo;
@@ -272,13 +331,16 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     }
                                     
                                     gPacienteconsecutivo.setConn(cwinsislab.getCon());                                                          // <-- Si no existe el registro en la tabla paciente_consecutivo se ingresa
-                                    if (!(gPacienteconsecutivo.existePaciente_cosecutivo(consecutivo_orden, "40"))) {
-                                        pacienteconsecutivo.setAll(consecutivo_orden, fechaOrden, "40");
+                                    // if (!(gPacienteconsecutivo.existePaciente_cosecutivo(consecutivo_orden, "60"))) {
+                                    if (!(gPacienteconsecutivo.existePaciente_cosecutivo(consecutivo_orden, codSede))) {
+                                        // pacienteconsecutivo.setAll(consecutivo_orden, fechaOrden, "60");
+                                        pacienteconsecutivo.setAll(consecutivo_orden, fechaOrden, codSede);
                                         gPacienteconsecutivo.create(pacienteconsecutivo);
                                     }
                                     
                                     gPaciente.setConn(cwinsislab.getCon());                                                                     // <-- Si no existe el registro en la tabla paciente se ingresa    
-                                    if (!(gPaciente.existePaciente(consecutivo_orden, fechaOrden, "40"))) {
+                                    //if (!(gPaciente.existePaciente(consecutivo_orden, fechaOrden, "60"))) {
+                                    if (!(gPaciente.existePaciente(consecutivo_orden, fechaOrden, codSede))) {    
                                         medicos.setConn(cwinsislab.getCon());                                                                   // <-- SE CONTROLA LA LLAVE FORANEA COD_MEDICOS PARA EVITAR ERRORES DE INTEGRIDAD REFERENCIAL
                                         if (medicos.existe_medico(labo_ord.getCOD_MEDICO())) {
                                             cod_medico = labo_ord.getCOD_MEDICO();
@@ -305,10 +367,11 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                             procede = "1";
                                         }                                        
                                         
+                                        // 18/01/2019: se cambia la sede quemada 60 por la variable codSede
                                         paciente.setAll(
-                                                consecutivo_orden, hora, fechaOrden, "40", docPaciente, labo_ord.getTIPO_DOC(), docPaciente,
+                                                consecutivo_orden, hora, fechaOrden, codSede, docPaciente, labo_ord.getTIPO_DOC(), docPaciente,
                                                 "", false, "NA", labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), "NA", true,
-                                                fechaOrden, fechaOrden, hora, hora, "40", "40", labo_ord.getDIRECCION(), labo_ord.getTELEFONO(), cod_medico,
+                                                fechaOrden, fechaOrden, hora, hora, codSede, codSede, labo_ord.getDIRECCION(), labo_ord.getTELEFONO(), cod_medico,
                                                 nom_medico, labo_ord.getEMAIL(), procede, nacio, anios, medida_edad, labo_ord.getSEXO(), labo_ord.getPISO(),
                                                 labo_ord.getCOD_CENCOS(), null, null, false, "1", null, 0, 0, 0, 0, "IMAT", 0, 0, 0, 0, 0, null, null, labo_ord.getNUM_ORDEN(),
                                                 null, labo_ord.getNOADMISION(), labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, null, labo_ord.getNUM_ORDEN(),
@@ -318,16 +381,63 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         gPaciente.create(paciente);
                                     }
                                     // <-- SE GUARDA EN LA TABLA PACODBC DE LA BASE DE DATOS DBWINSISLAB
+                                    // Se cambia la sede quemada 60 por la variable codSede
                                     p.setAll(labo_ord.getNUM_ORDEN(), labo_ord.getTIPO_DOC(), docPaciente, labo_ord.getNOADMISION(), null, null, hora, fechaOrden, docPaciente, false, null,
                                             labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), null, true, labo_ord.getDIRECCION(), labo_ord.getTELEFONO(), labo_ord.getCOD_MEDICO(),
                                             labo_ord.getNOM_MEDICO(), labo_ord.getEMAIL(),"1", labo_ord.getNOM_CLIENTE(), nacio, labo_ord.getSEXO(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "", 0, 0, "",
                                             labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, 0, 0, 0, 0, null, null, labo_ord.getCELULAR(), piso, null, fechaOrden,
-                                            hora, fechaAct, horaAct, "1", "40", consecutivo_orden, true);
+                                            hora, fechaAct, horaAct, "1", codSede, consecutivo_orden, true);
                                     gPacodbc.setConn(cwinsislab.getCon());
                                     gPacodbc.create(p);
-                                    guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente); //Se llama al método que guarda los detalles del examen            // <-- SE GUARDAN LOS DETALLES DEL EXAMEN
+                                    
+                                    // [05/03/2020] La variable de control para el ciclo declarada como i interfería con el bojeto global i
+                                    // lo cual causaba el mal funcionamiento del ciclo
+                                    // guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, labo_ord.getNUM_PETICION());
+                                    // fac         = 0;
+                                    // v_ctrl      = 0;
+                                    // cantidadExa = labo_ord.getCANTIDAD();
+                                    
+                                    n_peticion = labo_ord.getNUM_PETICION();
+                                    guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+                                    
+//                                    while(v_ctrl < cantidadExa){      
+//                                        // for(int vc=0; vc < cantidadExa; vc++) {
+//                                        System.out.println("v_ctrl = " + v_ctrl + " Cantidad=" + cantidadExa + "Ciclo 1");
+//                                        if(fac == 0) {
+//                                            guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+//                                        } else {
+//                                           guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, (factor1+1));
+//                                            factor1 = factor1 + 1;
+//                                        }
+//                                        fac = fac + 1;
+//                                        v_ctrl = v_ctrl + 1;
+//                                    }
+                                
                                 } else {
-                                    guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente);                                    // <-- SE GUARDAN LOS DETALLES DEL LABORATORIO
+                                    // SE CONSTRUYE EL CICLO PARA EL GUARDADO DE ORDENES CON CANTIDAD MAYOR A 1
+                                    // guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, labo_ord.getNUM_PETICION());
+                                    // [05/03/2020] La variable de control para el ciclo declarada como i interfería con el bojeto global i
+                                    // lo cual causaba el mal funcionamiento del ciclo
+                                    // guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, labo_ord.getNUM_PETICION());
+
+//                                    fac         = 0;
+//                                    v_ctrl      = 0;
+//                                    cantidadExa = labo_ord.getCANTIDAD();
+                                    n_peticion = labo_ord.getNUM_PETICION();
+                                    guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+                                    
+//                                    while(v_ctrl < cantidadExa){ 
+//                                        //for(int vc=0; vc < cantidadExa; vc++) {
+//                                        System.out.println("v_ctrl = " + v_ctrl + " Cantidad=" + cantidadExa + "Ciclo 2");
+//                                        if(fac == 0) {
+//                                            guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+//                                        } else {
+//                                            guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, (factor1+1));
+//                                            factor1 = factor1 + 1;
+//                                       }
+//                                        fac = fac + 1;
+//                                        v_ctrl = v_ctrl + 1;
+//                                    }
                                 }
                                 actualizarBarraDeEstado("Agilis: Registros enviados a Winsislab");
                             }
@@ -335,8 +445,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             paraEnviar.clear();
                         }
                         setProgress(100);
+                        presionarBoton();
                     } else {
                         actualizarBarraDeEstado("Agilis: No existen registros para procesar");
+                        setProgress(100);
                         presionarBoton();
                     }
                     try {
@@ -369,11 +481,11 @@ public class Prototipo_servicio_Agilis implements Runnable {
         cwinsislab.CerrarCon();
     }
 
-    public void guardarDetalles(LABO_ORD obj, Conexion ca, Conexion cw, String dcto) {                          // <-- METODO ENCARGADO DE GUARDAR TODOS LOS DETALLES DE LOS DIFERENTES LABORATORIOS
+    public void guardarDetalles(LABO_ORD obj, Conexion ca, Conexion cw, String dcto, String cSede, int secuencia) {                          // <-- METODO ENCARGADO DE GUARDAR TODOS LOS DETALLES DE LOS DIFERENTES LABORATORIOS
         try {
             String documento = dcto;
-            cwinsislab = cw;
-            cagilis = ca;
+            cwinsislab       = cw;
+            cagilis          = ca;
 
             if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {                                // <-- Verificamos que las conexiones sean válidas
                 infoConn.datosConexionWinsislab();
@@ -387,29 +499,33 @@ public class Prototipo_servicio_Agilis implements Runnable {
             }
             
             gpacodbc_det.setConn(cwinsislab.getCon());                                                          // <-- Si no existe el detalle de la orden de laboratorio en la tabla pacodbc_det
-            if (!(gpacodbc_det.existeDetalle(obj.getNUM_ORDEN(), obj.getCOD_EXAMEN(), String.valueOf(obj.getNUM_PETICION())))) {
+            // if (!(gpacodbc_det.existeDetalle(obj.getNUM_ORDEN(), obj.getCOD_EXAMEN(), String.valueOf(obj.getNUM_PETICION())))) {
+            if (!(gpacodbc_det.existeDetalle(obj.getNUM_ORDEN(), obj.getCOD_EXAMEN(), String.valueOf(secuencia)))) {
                 String exa, cod_alt;
                 double precio;
                 hei.setConn(cwinsislab.getCon());                                                               // <-- Se toma el id de examen correspondiente a la DB Winsislab equivalente al que viene de la DB de Agilis
                 id_examen_winsis = hei.retornaCodigoWinsisLab(obj.getCOD_EXAMEN()); //H4
                 gDet_tarifa.setConn(cwinsislab.getCon());
                 gDet_tarifa.valorTarifa(id_examen_winsis);
-                exa = gDet_tarifa.getExamen();//H4
+                exa     = gDet_tarifa.getExamen();//H4
                 cod_alt = gDet_tarifa.getCodigo_alt();//19304
-                precio = gDet_tarifa.getPrecio();//11015
-                
-                gPaciente_examenes.setConn(cwinsislab.getCon());                                                                                        // <-- SI NO EXISTE EL REGISTRO SE GUARDA EN LA TABLA PACIENTE_EXAMENES LOS DATOS DE LOS EXAMENES DE DETERMINADO PACIENTE
-                if (!(gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, obj.getNUM_PETICION()))) {
-                    paciente_examenes.setAll(                                                                                                           // <-- SE ALMACENA EN LA TABLA PACIENTE_EXAMENES
+                precio  = gDet_tarifa.getPrecio();//11015
+                // Se reemplaza la sede quemada 60 por el parámetro cSede
+                gPaciente_examenes.setConn(cwinsislab.getCon());
+                // <-- SI NO EXISTE EL REGISTRO SE GUARDA EN LA TABLA PACIENTE_EXAMENES LOS DATOS DE LOS EXAMENES DE DETERMINADO PACIENTE
+                // if (!(gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, obj.getNUM_PETICION(),cSede))) {
+                if (!(gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia, cSede))) {
+                    // <-- SE ALMACENA EN LA TABLA PACIENTE_EXAMENES
+                    paciente_examenes.setAll(                                                                                                           
                             consecutivo_orden,
                             hora,
                             fechaOrden,
-                            "40",
+                            cSede,
                             documento,
                             obj.getTIPO_DOC(),
                             documento,
                             id_examen_winsis,
-                            obj.getNUM_PETICION(),
+                            secuencia, // obj.getNUM_PETICION(),
                             true,
                             precio,
                             obj.getCOD_EXAMEN(),
@@ -450,7 +566,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             null,
                             null,
                             0,
-                            "40",
+                            cSede,
                             null,
                             null,
                             null,
@@ -468,16 +584,17 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             fechaAct);
                     gPaciente_examenes.create(paciente_examenes);
                 }
-                
+                // Se cambia la sede quemada 60 por el parámetro cSede
                 gEventos_paciente_exam.setConn(cwinsislab.getCon());                                                // <-- SI NO EXISTE EL REGISTRO EN LA TABLA, SE INGRESAN DATOS EN LA TABLA EVENTOS PACIENTE EXAMEN
-                if (!(gEventos_paciente_exam.existe_eventos_paciente_exam(consecutivo_orden, fechaOrden, id_examen_winsis, obj.getNUM_PETICION()))) {
-                    eventos_paciente_exam.setAll(consecutivo_orden, hora, fechaOrden, "40", documento, obj.getTIPO_DOC(), documento,
-                            id_examen_winsis, obj.getNUM_PETICION(), "010", fechaOrden, horaAct, "REGISTRO DESDE IMAT", "1", true, obj.getNUM_PETICION());
+                // if (!(gEventos_paciente_exam.existe_eventos_paciente_exam(consecutivo_orden, fechaOrden, id_examen_winsis, obj.getNUM_PETICION()))) {
+                if (!(gEventos_paciente_exam.existe_eventos_paciente_exam(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia))) {
+                    eventos_paciente_exam.setAll(consecutivo_orden, hora, fechaOrden, cSede, documento, obj.getTIPO_DOC(), documento,
+                            id_examen_winsis, secuencia, "010", fechaOrden, horaAct, "Registro de Clintos (Interfaz)", "1", true, secuencia);
                     gEventos_paciente_exam.create(eventos_paciente_exam);
                 }
                 
-                pacodbc_det.setAll(obj.getNUM_ORDEN(), obj.getTIPO_DOC(), documento, String.valueOf(obj.getNUM_PETICION()), obj.getCOD_EXAMEN(), String.valueOf(obj.getNUM_PETICION()),             // <-- SE ALMACENA EN LA TABLA PACODBC_DET:
-                        obj.getNOM_EXAMEN(), obj.getCANTIDAD(), 0, 0, id_examen_winsis, String.valueOf(obj.getNUM_PETICION()), null, true);
+                pacodbc_det.setAll(obj.getNUM_ORDEN(), obj.getTIPO_DOC(), documento, String.valueOf(secuencia), obj.getCOD_EXAMEN(), String.valueOf(secuencia),             // <-- SE ALMACENA EN LA TABLA PACODBC_DET:
+                        obj.getNOM_EXAMEN(), 1, 0, 0, id_examen_winsis, String.valueOf(secuencia), null, true);
                 gpacodbc_det.setConn(cwinsislab.getCon());
                 gpacodbc_det.create(pacodbc_det);
                 obj.setESTADO(1);

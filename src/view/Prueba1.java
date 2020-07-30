@@ -2112,11 +2112,11 @@ public class Prueba1 extends javax.swing.JFrame {
                 hei.setConn(cwinsislab.getCon());
                 while (i.hasNext()) {
                     labo_ord = (LABO_ORD) i.next();
-                    if (hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()).equals("")) {
+                    if ( String.valueOf( hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()) ).equals("")) {
                         modAux.addRow(new Object[]{labo_ord.getID(), labo_ord.getNOADMISION(), labo_ord.getNUM_ORDEN(), labo_ord.getFECHA_RESULTADO(), labo_ord.getTIPO_DOC(),
                             labo_ord.getDOCUMENTO(), labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(),
                             labo_ord.getCOD_EXAMEN(), labo_ord.getNOM_EXAMEN(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "No existe ID_ALTERNA"});
-                    } else if (hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()).equals("")) {
+                    } else if ( String.valueOf( hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()) ).equals("")) {
                         modAux.addRow(new Object[]{labo_ord.getID(), labo_ord.getNOADMISION(), labo_ord.getNUM_ORDEN(), labo_ord.getFECHA_RESULTADO(), labo_ord.getTIPO_DOC(),
                             labo_ord.getDOCUMENTO(), labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(),
                             labo_ord.getCOD_EXAMEN(), labo_ord.getNOM_EXAMEN(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "No está homologado"});
