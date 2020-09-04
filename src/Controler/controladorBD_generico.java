@@ -382,5 +382,20 @@ public class controladorBD_generico {
         }
         return count;
     }
+    
+    public String valorVariable(Connection con, String variable) {
+        String dato="";
+
+        try {
+            this.aux  = con.createStatement().executeQuery("SELECT DATO FROM USVGS WHERE IDVARIABLE='" + variable + "'");
+            while (aux.next()) {
+                dato = aux.getString("DATO");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Ocurrio un error al consultar la \ntabla USVGS de la Bd Clintos 2:\n" + ex.toString());
+        }
+        
+        return dato;
+    }
 
 }

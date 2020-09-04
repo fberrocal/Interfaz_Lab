@@ -11,6 +11,7 @@ import Model.Ciudades;
 import Model.Eventos_paciente_exam;
 import Model.LABO_ORD;
 import Model.Paciente;
+import Model.Paciente_Adicionales;
 import Model.Paciente_consecutivo;
 import Model.Paciente_examenes;
 import Model.Pacodbc;
@@ -66,6 +67,8 @@ public class Prototipo_servicio_Agilis implements Runnable {
     Paciente_consecutivo pacienteconsecutivo;
     PacienteDao gPaciente;
     Paciente paciente;
+    Paciente_Adicionales pacAdicionales;
+    Paciente_adicionalesDao gPacAdicionales;
     Eventos_paciente_examDao gEventos_paciente_exam;
     Eventos_paciente_exam eventos_paciente_exam;
     medicosDao medicos;
@@ -81,7 +84,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
     Time horaAct, hora;
     int dif_en_dias, rest, meses, edad;
     String medida_edad;
-    String cod_medico, nom_medico, docPaciente, piso;
+    String cod_medico, nom_medico, docPaciente, piso, direccion, pacAdicionalEps;
     String codSede;
     ReproductorAlarma ra;
     long consecutivo,prefijo;
@@ -123,6 +126,8 @@ public class Prototipo_servicio_Agilis implements Runnable {
         infoConn = new DatosConexion();
         infoConn.datoLabxDias();                                                                            // <-- Carga el número de dias de antiguedad buscados por la interfaz en LABO_ORD
         diasLab = infoConn.getDiasLab();
+        pacAdicionales = new Paciente_Adicionales();
+        gPacAdicionales = new Paciente_adicionalesDao();
         
         infoConn.datosConexionWinsislab();                                                                  //  <-- CONEXIONES A LAS BASES DE DATOS AGILIS Y DBWINSISLAB
         cwinsislab = new Conexion(infoConn.getDriver(), "jdbc:postgresql://" + infoConn.getUrl(),
@@ -136,6 +141,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
         SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
         cal = Calendar.getInstance();
         fac = factor1 = 0;
+        pacAdicionalEps = objetoBD.valorVariable(cagilis.getCon(), "@PACADICIONALESEPS");
         
         while (centinela) {                                                                                 // <-- CICLO INFINITO DE EJECUCION DE LA INTERFAZ (HILO DE PROCESO)
             try {
@@ -261,6 +267,14 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     
                                     if (labo_ord.getPISO().length() > 10) {                                 //SE TOMAN LOS DATOS sede_codigo,prefor,orden,preo1,langel_actual DE LA TABLA SEDES (DB Winsislab) CUANDO EL CAMPO sede_codigo SEA '60'
                                         piso = (labo_ord.getPISO().substring(0, 9));                        ///Este paso se realiza siempre que la cadena de piso supere los 10 caracteres
+                                    } else {
+                                        piso = labo_ord.getPISO();
+                                    }
+                                    
+                                    if (labo_ord.getDIRECCION().length() > 60) {
+                                        direccion = (labo_ord.getDIRECCION().substring(0, 59));
+                                    } else {
+                                        direccion = labo_ord.getDIRECCION();
                                     }
                                     
                                     try {
@@ -371,7 +385,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         paciente.setAll(
                                                 consecutivo_orden, hora, fechaOrden, codSede, docPaciente, labo_ord.getTIPO_DOC(), docPaciente,
                                                 "", false, "NA", labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), "NA", true,
-                                                fechaOrden, fechaOrden, hora, hora, codSede, codSede, labo_ord.getDIRECCION(), labo_ord.getTELEFONO(), cod_medico,
+                                                fechaOrden, fechaOrden, hora, hora, codSede, codSede, direccion, labo_ord.getTELEFONO(), cod_medico,
                                                 nom_medico, labo_ord.getEMAIL(), procede, nacio, anios, medida_edad, labo_ord.getSEXO(), labo_ord.getPISO(),
                                                 labo_ord.getCOD_CENCOS(), null, null, false, "1", null, 0, 0, 0, 0, "IMAT", 0, 0, 0, 0, 0, null, null, labo_ord.getNUM_ORDEN(),
                                                 null, labo_ord.getNOADMISION(), labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, null, labo_ord.getNUM_ORDEN(),
@@ -383,7 +397,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     // <-- SE GUARDA EN LA TABLA PACODBC DE LA BASE DE DATOS DBWINSISLAB
                                     // Se cambia la sede quemada 60 por la variable codSede
                                     p.setAll(labo_ord.getNUM_ORDEN(), labo_ord.getTIPO_DOC(), docPaciente, labo_ord.getNOADMISION(), null, null, hora, fechaOrden, docPaciente, false, null,
-                                            labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), null, true, labo_ord.getDIRECCION(), labo_ord.getTELEFONO(), labo_ord.getCOD_MEDICO(),
+                                            labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), null, true, direccion, labo_ord.getTELEFONO(), labo_ord.getCOD_MEDICO(),
                                             labo_ord.getNOM_MEDICO(), labo_ord.getEMAIL(),"1", labo_ord.getNOM_CLIENTE(), nacio, labo_ord.getSEXO(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "", 0, 0, "",
                                             labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, 0, 0, 0, 0, null, null, labo_ord.getCELULAR(), piso, null, fechaOrden,
                                             hora, fechaAct, horaAct, "1", codSede, consecutivo_orden, true);
@@ -396,6 +410,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     // fac         = 0;
                                     // v_ctrl      = 0;
                                     // cantidadExa = labo_ord.getCANTIDAD();
+                                    
+                                    pacAdicionales.setAll(consecutivo_orden, hora, fechaOrden, codSede, docPaciente, labo_ord.getTIPO_DOC(), docPaciente, pacAdicionalEps, labo_ord.getNOM_CLIENTE(), true);
+                                    gPacAdicionales.setConn(cwinsislab.getCon());
+                                    gPacAdicionales.create(pacAdicionales);
                                     
                                     n_peticion = labo_ord.getNUM_PETICION();
                                     guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
