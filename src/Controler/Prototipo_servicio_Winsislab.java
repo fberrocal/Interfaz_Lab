@@ -27,10 +27,9 @@ import view.Prueba1;
  */
 public class Prototipo_servicio_Winsislab implements Runnable {
     SimpleDateFormat dtf = new SimpleDateFormat("yyyy-MM-dd");
-    public boolean centinela = true;                                                // <-- Variable de control de hilo 
-                                                                                    // Objetos para acceso a las bases de datos:
-    DatosConexion infoConn;                                                         // <-- Datos para establecer conexión con las bases de datos
-    Conexion cagilis, cwinsislab;                                                   // <-- Conexiones a las bases de datos Agilis y Winsislab
+    public boolean centinela = true;
+    DatosConexion infoConn;
+    Conexion cagilis, cwinsislab;
     Intercambios intercambios;
     IntercambiosDao gIntercambios;
     Pacodbc_detDao gPacodbc_det;
@@ -42,19 +41,15 @@ public class Prototipo_servicio_Winsislab implements Runnable {
     PacienteDao gPaciente;
     LABO_ORDDao gLabo_ord;
     PacodbcDao p;
-                                                                                                        // Variables auxiliares:
-    Iterator i;                                                                                         // <-- Objeto del tipo Iterator para manipilar los datos en forma de arreglo de datos
+    Iterator i;
     Iterator co;
     SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
     Timestamp fecha;
     String documentoCliente;
     String tablasResult;
-    
-    PreparedStatement stmt;             //<-- Conexiones a las bases de datos                           // Connection cAgilis, cWinsislab;
+    PreparedStatement stmt;
     ResultSet rs, aux;
     DefaultTableModel tabLab;
-    
-// Variables para resultados de Biopsias:
     String qry;
     String resBiopsias [];
     String codigos[];
@@ -67,8 +62,8 @@ public class Prototipo_servicio_Winsislab implements Runnable {
     boolean controlado;
     
     @Override
-    public void run() {                                                                                 // <-- METODO EJECUTADO POR EL HILO DE PROCESO DE WINSISLAB
-        infoConn      = new DatosConexion();                                                                 // <-- Cración de objetos para manejo de bases de datos:
+    public void run() {
+        infoConn      = new DatosConexion();
         gIntercambios = new IntercambiosDao();
         gPacodbc_det  = new Pacodbc_detDao();
         labo_res      = new LABO_RES();
@@ -81,7 +76,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         gLabo_ord     = new LABO_ORDDao();
         controlado    = false;
 
-        infoConn.datosConexionWinsislab();                                                              //<-- Estableciendo las conexiones con las que se controlarán las bases de datos:
+        infoConn.datosConexionWinsislab();
         cwinsislab = new Conexion(infoConn.getDriver(), "jdbc:postgresql://" + infoConn.getUrl(),
                 infoConn.getUs(), infoConn.getPas());
         infoConn.datosConexionAgilis();
@@ -91,9 +86,9 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         stmt = null;
         rs = null;
 
-        presionarBoton();                                                                               // <--Presionar un botón de Interfaz Principal
+        presionarBoton();
 
-        while (centinela) {                                                                             // <-- CICLO INFINITO DE EJECUCION DE LA INTERFAZ (HILO DE PROCESO):
+        while (centinela) {
             try {
                 try {
                     infoConn.datoResxDias();
@@ -101,8 +96,6 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                     tablasResult = objetoBD.valorVariable(cagilis.getCon(), "@TABLASRESULTLAB");
                     
                     setProgress(10);
-                    
-                    // Se validan las conexiones a Bases de Datos:
                     
                     if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {
                         infoConn.datosConexionWinsislab();
@@ -115,31 +108,14 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                 infoConn.getUs(), infoConn.getPas());
                     }
                     
-                    // Se consultan los Códigos de laboratorios restringidos y se carga el array codigos
                     co = objetoBD.getLabscontrolados(cagilis.getCon(),"LABORES", "VALIDAEX").iterator();
                     
-                    // codigo de prueba
-                    //String salida="";
-                    //if (co.hasNext()) {
-                    //   while (co.hasNext()) {
-                    //       salida = salida + (String) co.next().toString() + " - "; 
-                    //    }
-                    //}
-                    //JOptionPane.showMessageDialog(null, "Codigos: " + salida);
-                    //i = gIntercambios.pendientes(cwinsislab.getCon(), "select sede_origen, proceso, cod_tabla,llave1,llave2,llave3,llave4,llave5,estado8, fecha from intercambios "
-                    //        + "where cod_tabla='090' and estado8 is false and fecha>='" + fechaListado() + " 00:00:00'::timestamp").iterator();
-                    // 01.12.2020 - fberrocalm
-                    // Se elimina el filtro del cod_tabla en la consulta a Winsislab
-                    System.out.println("Fecha búsqueda: " + fechaListado());
                     i = gIntercambios.pendientes(cwinsislab.getCon(), "select sede_origen, proceso, cod_tabla,llave1,llave2,llave3,llave4,llave5,estado8, fecha from intercambios "
                             + "where cod_tabla in (" + tablasResult + ") and estado8 is false and fecha>='" + fechaListado() + " 00:00:00'::timestamp").iterator();
                     
                     setProgress(60);
-                    if (i.hasNext()) {                                                                               //Existen registros sin procesar en la tabla intercambios   
+                    if (i.hasNext()) {
                         while (i.hasNext()) {
-                            
-                            // # Se valida nuevamente el estado de las Coexiones a las Bases de Datos:
-                            
                             if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {
                                 infoConn.datosConexionWinsislab();
                                 cwinsislab = new Conexion(infoConn.getDriver(), "jdbc:postgresql://" + infoConn.getUrl(),
@@ -165,12 +141,11 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                     + "and r.paciente_cod =? and r.sede_codigo =? and r.fecha =? ::date and r.examen_cod =? and r.reg_exa =? and r.secuencia = 1"
                                     + " and(pe.nro_muestra1 <>'' or pe.nro_muestra1 is not null) "
                                     + "order by r.reg_exa,r.analito_cod";
+                            
                             stmt = cwinsislab.getCon().prepareStatement(sql);
                             stmt.setString(1, intercambios.getLlave2());
                             stmt.setString(2, intercambios.getSede_origen());
-                            stmt.setObject(3, intercambios.getLlave3());            // <-- En esta línea se pasa la fecha de peticion del Examen, esta línea está en prueba
-                                                                                    //stmt.setDate(3, java.sql.Date.valueOf(formato.format(new Date(intercambios.getLlave3()))));  
-                                                                                    //stmt.setDate(3, java.sql.Date.valueOf(formato.format(new Date())));
+                            stmt.setObject(3, intercambios.getLlave3());
                             stmt.setString(4, intercambios.getLlave4());
                             stmt.setInt(5, Integer.parseInt(intercambios.getLlave5()));
 
@@ -196,7 +171,6 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                            }
                                         }
                                         
-                                        // Si es controlado lo retiene si no lo envia a labo_res
                                         if (controlado == true) {
                                             xlabo_res.setAll(0, rs.getString("n_carnet"), rs.getString("autorizacion"), rs.getString("tipodcto_cod"),
                                                     documentoCliente, rs.getString("alterno"), Integer.parseInt(rs.getString("secuencia")), fecha, rs.getString("analito_cod"),
@@ -213,7 +187,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                             gLabo_res.setConn(cagilis.getCon());
                                             gLabo_res.create(labo_res);
                                         }
-                                    }  // <-- FIN WHILE 2
+                                    }
 
                                     qry = "";
                                     qry = "SELECT x.*, y.alterno FROM resul_lab_text x left join paciente_examenes y on x.paciente_cod=y.paciente_cod ";
@@ -227,7 +201,6 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                     if (objetoBD.tieneResultados(stmt2)) {
                                         objetoBD.ejecutaQuery(stmt2);
                                         rs2 = objetoBD.getRs();
-                                        // Se atomiza cada resultado ingresado en la Biopsia para generar un analito por cada resultado
                                         
                                         while (rs2.next()) {
                                             fecha   = Timestamp.valueOf(rs2.getString("fecha") + " " + rs2.getString("hora") + ".000");
@@ -237,28 +210,14 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                             
                                             String rBiopsias [] = {rs2.getString("result01"),rs2.getString("result02"),rs2.getString("result03"),rs2.getString("result04"),rs2.getString("result05"),rs2.getString("result06"),rs2.getString("result07")};
                                             resBiopsias = rBiopsias;
-                                            /*
-                                            rBiopsias = new String [6];
-                                            rBiopsias[0] = rs2.getString("result01");
-                                            rBiopsias[1] = rs2.getString("result02");
-                                            rBiopsias[2] = rs2.getString("result03");
-                                            rBiopsias[3] = rs2.getString("result04");
-                                            rBiopsias[4] = rs2.getString("result05");
-                                            rBiopsias[5] = rs2.getString("result06");
-                                            rBiopsias[6] = rs2.getString("result07");
-                                            */    
                                         }
                                     }
                                     
                                     if(resBiopsias != null) {
                                         if(resBiopsias.length > 0) {
                                             for(int k=0 ; k<resBiopsias.length ; k++) {
-                                               // if(((String)resBiopsias[k]).isEmpty()) {}
-                                               //if(!(((String)resBiopsias[k]).isEmpty()) && resBiopsias[k] != null) {
                                                if(!(String.valueOf(resBiopsias[k]).isEmpty())){
-                                                    //if(!(((String)resBiopsias[k])=="") && resBiopsias[k] != null) {
                                                     if( resBiopsias[k] != null) {    
-                                                    // if(!(resBiopsias[k] == "") && resBiopsias[k] != null) { 
                                                          labo_res.setAll(0,nCarnet,autoriz,tipoDoc,documentoCliente,alterno,k+1,fecha,analito,"RESULTADO",resBiopsias[k],"","","",usrval,0);
                                                          gLabo_res.setConn(cagilis.getCon());
                                                          gLabo_res.create(labo_res);
@@ -275,11 +234,11 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                         Logger.getLogger(Prototipo_servicio_Winsislab.class.getName()).log(Level.SEVERE, "Error intentando cambiar el estado en la tabla intercambios \n" + ex.toString(), ex);
                                         System.out.print("Error intentando cambiar el estado en la tabla intercambios \n" + ex.getMessage());
                                     }
-                                }                                                                           // <-- FIN IF
+                                }
                                 rs = null;
                                 actualizarBarraDeEstado("Winsislab: Resultados de Laboratorio enviados a Agilis");
                             }
-                        }                                                                                                                           // <-- FIN DEL WHILE 1
+                        }
                     } else {
                         actualizarBarraDeEstado("Winsislab: No existen laboratorios pendientes");
                     }
@@ -287,7 +246,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                     presionarBoton();
                     i = null;
                     try {
-                        setProgress(0);                                                         // <-- OJO UN SLEEP A UN TREAD DENTRO DE UN LOOP PUEDE CAUSAR PROBLEMAS DE FUNCIONAMIENTO
+                        setProgress(0);
                         infoConn.datoTimeWinsislab();
                         Thread.sleep(Integer.parseInt(infoConn.getTimeWinsislab()));
                     } catch (NumberFormatException | InterruptedException e) {
@@ -308,11 +267,11 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                 cagilis = new Conexion(infoConn.getDriver(), "jdbc:sqlserver://" + infoConn.getUrl(),
                         infoConn.getUs(), infoConn.getPas());
             }
-        }                                                                                           // <-- fin del ciclo infinito
+        }
         cagilis.CerrarCon();
         cwinsislab.CerrarCon();
     }
-                                                                                                                  // METODOS PARA MANEJO DE LA INTERFAZ GRAFICA PRINCIPAL 
+
     private void setProgress(int percent) {
         //SwingUtilities.invokeLater(() -> {
             Prueba1.pb_winsis.setValue(percent);
@@ -336,15 +295,10 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         });
     }
     
-    /**
-     * Retorna una fecha anterior a la del sistema definida por 
-     * el número de días estipulado por el parámetro diasRes
-     * Refactored 18.12.2020 - fberrocal
-     */
     private String fechaListado() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new java.util.Date());
-        calendar.add( Calendar.DAY_OF_YEAR, (diasRes * -1));            // Ojo por defecto debe ser -1
+        calendar.add( Calendar.DAY_OF_YEAR, (diasRes * -1));
         return formato.format(calendar.getTime());
     }
 }
