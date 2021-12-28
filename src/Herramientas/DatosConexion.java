@@ -17,6 +17,7 @@ public class DatosConexion {
     String driver, url, us, pas;
     String timeAgilis, timeWinsislab;
     int diasLab;
+    int diasRes;
     
     public DatosConexion() {
     }
@@ -27,6 +28,14 @@ public class DatosConexion {
 
     public void setDiasLab(int diasLab) {
         this.diasLab = diasLab;
+    }
+    
+    public int getDiasRes() {
+        return diasRes;
+    }
+
+    public void setDiasRes(int diasRes) {
+        this.diasRes = diasRes;
     }
     
     public String getTimeAgilis() {
@@ -126,6 +135,19 @@ public class DatosConexion {
             JOptionPane.showMessageDialog(null, "Error durante la carga del archivo de propiedades: " + ex);
         }
         diasLab = Integer.parseInt( prop.getProperty("labxAnt") ); 
+    }
+    
+    /**
+     * Número de días en el pasado que se pueden buscar Resultados.  fberrocalm 17.12.2020     
+     */
+    public void datoResxDias()
+    {
+        try {
+            prop = PropertiesIO.read(ruta);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Error durante la carga del archivo de propiedades: " + ex);
+        }
+        diasRes = Integer.parseInt( prop.getProperty("resxAnt") ); 
     }
 
 }

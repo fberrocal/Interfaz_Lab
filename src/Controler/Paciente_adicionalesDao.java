@@ -370,4 +370,63 @@ public class Paciente_adicionalesDao {
 
           return (List)searchResults;
     }
+    
+    public boolean existeCodPacienteAdicionales(String paciente_cod, String pacAdicionalEpsp) 
+    {
+        String sql             = "SELECT * FROM paciente_adicionales WHERE paciente_cod=? AND concap_cod=?";
+        PreparedStatement stmt = null;
+        // ResultSet rs           = null;
+        ResultSet rs;
+		
+        try {
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, paciente_cod);
+            stmt.setString(2, pacAdicionalEpsp);
+            rs = stmt.executeQuery();
+			
+            if (rs.next()) {
+                return true;
+            }
+			
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al ejecutar select sobre la\ntabla paciente_adicionales de la Bd Winsislab:\n" + ex.toString());
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    //rs.close();
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, "Error al intentar cerrar el statement\nde la tabla paciente_adicionales de Winsislab:\n" + ex.toString());
+                }
+            }
+        }
+		
+        return false;
+    }
+    
+    public void deleteInfoPaciente(Paciente_Adicionales valueObject) throws NotFoundException, SQLException 
+    {
+        String sql             = "DELETE FROM paciente_adicionales WHERE (paciente_cod = ? AND concap_cod = ?) ";
+        PreparedStatement stmt = null;
+
+        try {
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, valueObject.getPaciente_cod());
+            stmt.setString(2, valueObject.getConcap_cod());
+
+            int rowcount = databaseUpdate(stmt);
+
+            if (rowcount == 0) {
+                throw new NotFoundException("El registro no pudo ser eliminado! (Registro no encontrado)");
+            }
+
+            if (rowcount > 1) {
+                throw new SQLException("Error de PrimaryKey al actualizar la BD! (Varios registros fueron eliminados!)");
+            }
+
+        } finally {
+            if (stmt != null)
+                        stmt.close();
+        }
+    }
 }

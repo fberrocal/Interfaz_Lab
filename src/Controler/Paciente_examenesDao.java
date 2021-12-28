@@ -565,5 +565,40 @@ public class Paciente_examenesDao {
         }
         return false;
     }
+    
+    /***
+     * Máximo ítem registrado en paciente_examenes para un código de paciente (OK)
+     * Revisado 01.12.2020
+     * @param paciente_cod
+     * @return 
+     */
+    public int get_max_RegExam(String paciente_cod) 
+    {
+        String sql             = "select max(reg_exa) as maximo from paciente_examenes where paciente_cod=?";
+        PreparedStatement stmt = null;
+        ResultSet rs;
+		
+        try {
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, paciente_cod);
+
+            rs   = stmt.executeQuery();
+			
+            if (rs.next()) {
+                return rs.getInt("maximo");
+            }			
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error tabla paciente_examenes \n al intentar ejecutar la consulta\n" + ex.toString());
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, "Error al intentar cerrar\nel Statement de la tabla paciente_examenes:\n" + ex.toString());
+                }
+            }
+        }
+        return 0;
+    }
 
 }

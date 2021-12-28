@@ -16,7 +16,7 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
+// import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import view.Prueba1;
@@ -48,6 +48,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
     SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
     Timestamp fecha;
     String documentoCliente;
+    String tablasResult;
     
     PreparedStatement stmt;             //<-- Conexiones a las bases de datos                           // Connection cAgilis, cWinsislab;
     ResultSet rs, aux;
@@ -62,6 +63,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
     PreparedStatement stmt2;
     String nCarnet, autoriz, tipoDoc, analito, alterno, usrval; 
     int j;
+    int diasRes;
     boolean controlado;
     
     @Override
@@ -94,6 +96,10 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         while (centinela) {                                                                             // <-- CICLO INFINITO DE EJECUCION DE LA INTERFAZ (HILO DE PROCESO):
             try {
                 try {
+                    infoConn.datoResxDias();
+                    diasRes      = infoConn.getDiasRes();
+                    tablasResult = objetoBD.valorVariable(cagilis.getCon(), "@TABLASRESULTLAB");
+                    
                     setProgress(10);
                     
                     // Se validan las conexiones a Bases de Datos:
@@ -120,9 +126,13 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                     //    }
                     //}
                     //JOptionPane.showMessageDialog(null, "Codigos: " + salida);
-                    
-                    i = gIntercambios.pendientes(cwinsislab.getCon(), "select sede_origen, proceso, cod_tabla,llave1,llave2,llave3,llave4,llave5,estado8, fecha from intercambios "             //Se consulta la tabla intercambio buscando Resultados sin procesar
-                            + "where cod_tabla='090' and estado8 is false and fecha>='" + fechaListado() + " 00:00:00'::timestamp").iterator();
+                    //i = gIntercambios.pendientes(cwinsislab.getCon(), "select sede_origen, proceso, cod_tabla,llave1,llave2,llave3,llave4,llave5,estado8, fecha from intercambios "
+                    //        + "where cod_tabla='090' and estado8 is false and fecha>='" + fechaListado() + " 00:00:00'::timestamp").iterator();
+                    // 01.12.2020 - fberrocalm
+                    // Se elimina el filtro del cod_tabla en la consulta a Winsislab
+                    System.out.println("Fecha búsqueda: " + fechaListado());
+                    i = gIntercambios.pendientes(cwinsislab.getCon(), "select sede_origen, proceso, cod_tabla,llave1,llave2,llave3,llave4,llave5,estado8, fecha from intercambios "
+                            + "where cod_tabla in (" + tablasResult + ") and estado8 is false and fecha>='" + fechaListado() + " 00:00:00'::timestamp").iterator();
                     
                     setProgress(60);
                     if (i.hasNext()) {                                                                               //Existen registros sin procesar en la tabla intercambios   
@@ -170,8 +180,8 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                 objetoBD.ejecutaQuery(stmt);
                                 rs = objetoBD.getRs();
                                 gPacodbc_det.setConn(cwinsislab.getCon());
-                                if (gPacodbc_det.confirma_examen(intercambios.getLlave4(), intercambios.getLlave5(), gPaciente.retornaCodigoPaciente(intercambios.getLlave2()))) {
-                                    documentoCliente = gLabo_ord.retornaDocumento(cagilis.getCon(), gPaciente.retornaAutorizacionPaciente(cwinsislab.getCon(), intercambios.getLlave2()));
+                                if (gPacodbc_det.confirma_examen(intercambios.getLlave4(), intercambios.getLlave5(), gPaciente.retornaCodigoPaciente(intercambios.getLlave2(), diasRes))) {
+                                    documentoCliente = gLabo_ord.retornaDocumento(cagilis.getCon(), gPaciente.retornaAutorizacionPaciente(cwinsislab.getCon(), intercambios.getLlave2(), diasRes));
                                     while (rs.next()) {
                                         fecha   = Timestamp.valueOf(rs.getString("fec_val") + " " + rs.getString("hora_val") + ".000");
                                         nCarnet = rs.getString("n_carnet");
@@ -326,10 +336,15 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         });
     }
     
+    /**
+     * Retorna una fecha anterior a la del sistema definida por 
+     * el número de días estipulado por el parámetro diasRes
+     * Refactored 18.12.2020 - fberrocal
+     */
     private String fechaListado() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new java.util.Date());
-        calendar.add( Calendar.DAY_OF_YEAR, -1);            // Ojo por defecto debe ser -1
+        calendar.add( Calendar.DAY_OF_YEAR, (diasRes * -1));            // Ojo por defecto debe ser -1
         return formato.format(calendar.getTime());
     }
 }
