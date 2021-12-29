@@ -150,7 +150,8 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                             stmt.setInt(5, Integer.parseInt(intercambios.getLlave5()));
 
                             if (!objetoBD.tieneResultados(stmt)) {
-                                actualizarBarraDeEstado("Winsislab: No existen resultados por retornar");
+                                actualizarBarraDeEstado("Winsislab: No existen resultados para retornar a Clintos");
+                                cambiarEstadoResultado(intercambios, true);
                             } else {
                                 objetoBD.ejecutaQuery(stmt);
                                 rs = objetoBD.getRs();
@@ -236,7 +237,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                     }
                                 }
                                 rs = null;
-                                actualizarBarraDeEstado("Winsislab: Resultados de Laboratorio enviados a Agilis");
+                                actualizarBarraDeEstado("Winsislab: Resultados de Laboratorio enviados a Clintos");
                             }
                         }
                     } else {
@@ -300,5 +301,20 @@ public class Prototipo_servicio_Winsislab implements Runnable {
         calendar.setTime(new java.util.Date());
         calendar.add( Calendar.DAY_OF_YEAR, (diasRes * -1));
         return formato.format(calendar.getTime());
+    }
+    
+    // Cambia el estado de un registro de la tabla [intercambios]
+    public void cambiarEstadoResultado(Intercambios registroRes, boolean estado) {
+        registroRes.setEstado8(estado);
+        try {
+            gIntercambios.CambiarEstado(cwinsislab.getCon(), registroRes);
+        } catch (NotFoundException ex) {
+            Logger.getLogger(Prototipo_servicio_Winsislab.class.getName()).log(Level.SEVERE, 
+                             "Se ha lanzado un [NotFoundException] intentando cambiar el estado en la tabla intercambios \n" + ex.toString(), ex);
+            System.out.print("Error intentando cambiar el estado en la tabla intercambios \n" + ex.getMessage());
+        } catch (SQLException ex) {
+            Logger.getLogger(Prototipo_servicio_Winsislab.class.getName()).log(Level.SEVERE, 
+                              "Se ha lanzado un [SQLException] intentando cambiar el estado en la tabla intercambios \n" + ex.toString(), ex);
+        }
     }
 }
