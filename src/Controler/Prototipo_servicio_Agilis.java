@@ -406,7 +406,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         }
                                         
                                         procede="";
-                                        if(labo_ord.getCOD_CENCOS().equals("05")){
+                                        if(labo_ord.getCOD_CENCOS().equals("10")){
                                             procede = "2";
                                         }else{
                                             procede = "1";

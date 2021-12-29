@@ -151,7 +151,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
 
                             if (!objetoBD.tieneResultados(stmt)) {
                                 actualizarBarraDeEstado("Winsislab: No existen resultados para retornar a Clintos");
-                                cambiarEstadoResultado(intercambios, true);
+                                // cambiarEstadoResultado(intercambios, true);
                             } else {
                                 objetoBD.ejecutaQuery(stmt);
                                 rs = objetoBD.getRs();

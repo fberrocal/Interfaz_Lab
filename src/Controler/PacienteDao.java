@@ -2,7 +2,6 @@ package Controler;
 
 /**
  * Paciente Data Access Object (DAO).
- *
  * @author fberrocalm creado en: 13/02/2015
  */
 import Herramientas.DatosConexion;
@@ -844,14 +843,18 @@ public class PacienteDao {
                 return cod_enla3;
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            System.out.println("PacienteDao:\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
-                    rs.close();
+                    if (rs != null) {
+                        rs.close();
+                    }
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    System.out.println("PacienteDao:\n" + ex.toString());
                 }
             }
         }
