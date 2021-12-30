@@ -2,7 +2,6 @@ package Controler;
 
 /**
  * Paciente Data Access Object (DAO).
- *
  * @author fberrocalm creado en: 13/02/2015
  */
 import Herramientas.DatosConexion;
@@ -823,7 +822,7 @@ public class PacienteDao {
         return false;
     }
 
-    public String retornaCodigoPaciente(String idpaciente) {
+    public String retornaCodigoPaciente(String idpaciente, int numeroDias) {
 
         String cod_enla3 = null;
 
@@ -836,7 +835,7 @@ public class PacienteDao {
         try {
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, idpaciente);
-            stmt.setDate(2, java.sql.Date.valueOf( fechaListado() ) );
+            stmt.setDate(2, java.sql.Date.valueOf( fechaListado(numeroDias) ) );
             rs = stmt.executeQuery();
             if (rs.next()) {
                 cod_enla3 = rs.getString("cod_enla3");
@@ -844,14 +843,18 @@ public class PacienteDao {
                 return cod_enla3;
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            System.out.println("PacienteDao:\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
-                    rs.close();
+                    if (rs != null) {
+                        rs.close();
+                    }
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    System.out.println("PacienteDao:\n" + ex.toString());
                 }
             }
         }
@@ -860,14 +863,14 @@ public class PacienteDao {
     }
 
     //Si existe el registro con el código del paciente para actualizar el consecutivo
-    public boolean existeCodPaciente(String paciente_cod) {
-        String sql = "SELECT * FROM paciente WHERE paciente_cod=? and fecha >= ?::date";     // <-- Tengo dudas con este código
+    public boolean existeCodPaciente(String paciente_cod, int numeroDias) {
+        String sql = "SELECT * FROM paciente WHERE paciente_cod=? and fecha >= ?::date";
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, paciente_cod);
-            stmt.setDate(2, java.sql.Date.valueOf( fechaListado() ) );
+            stmt.setDate(2, java.sql.Date.valueOf( fechaListado(numeroDias) ) );
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return true;
@@ -887,14 +890,14 @@ public class PacienteDao {
         return false;
     }
 
-    public String retornaAutorizacionPaciente(Connection c, String idpaciente) {
+    public String retornaAutorizacionPaciente(Connection c, String idpaciente, int numeroDias) {
         String sql = "SELECT autorizacion FROM paciente WHERE paciente_cod=? and fecha >= ?::date";
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = c.prepareStatement(sql);
             stmt.setString(1, idpaciente);
-            stmt.setDate(2, java.sql.Date.valueOf( fechaListado() ) );
+            stmt.setDate(2, java.sql.Date.valueOf( fechaListado(numeroDias) ) );
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getString("autorizacion");
@@ -913,11 +916,20 @@ public class PacienteDao {
         return null;
     }
     
-    
-    private String fechaListado() {
+    /**
+     * Descripción: Retorna una fecha corrida hacia el pasado según en número de días recibidos
+     * @param nroDias
+     */
+    private String fechaListado(int nroDias) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new java.util.Date());
-        calendar.add(Calendar.DAY_OF_YEAR, -15);
+        
+        if (nroDias > 0) {
+            calendar.add( Calendar.DAY_OF_YEAR, (nroDias * -1));
+        } else {
+            calendar.add(Calendar.DAY_OF_YEAR, -90);
+        }
+        
         return dtf.format(calendar.getTime());
     }
 

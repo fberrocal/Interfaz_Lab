@@ -310,8 +310,8 @@ public class Eventos_paciente_examDao {
         return (List) searchResults;
     }
 
-    public boolean existe_eventos_paciente_exam(String cod_pac, java.util.Date fecha, String examen, int reg) {
-        String sql = "select * from eventos_paciente_exam where paciente_cod=? and fecha=? and sede_codigo='40' "
+    public boolean existe_eventos_paciente_exam(String cod_pac, java.util.Date fecha, String examen, int reg, String cSede) {
+        String sql = "select * from eventos_paciente_exam where paciente_cod=? and fecha=? and sede_codigo=? "
                 + "and examen=? and reg_exa=?";
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -319,14 +319,13 @@ public class Eventos_paciente_examDao {
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, cod_pac);
             stmt.setObject(2, fecha);
-            stmt.setObject(3, examen);
-            stmt.setInt(4, reg);
+            stmt.setString(3, cSede);
+            stmt.setObject(4, examen);
+            stmt.setInt(5, reg);
             rs = stmt.executeQuery();
-            if (rs.next()) {
-                return true;
-            } else {
-                return false;
-            }
+            
+            return rs.next();
+            
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Eventos_paciente_examDao:\n" + ex.toString());
         } finally {

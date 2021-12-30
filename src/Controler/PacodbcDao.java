@@ -170,7 +170,7 @@ public class PacodbcDao {
                 //System.out.println("PrimaryKey Error when updating DB!");
                 throw new SQLException("pacodbcDao:\nPrimaryKey Error when updating DB!");
             } else {
-                System.out.println("PacodbcDao\nAlmacenado en pacodbc");
+                //System.out.println("PacodbcDao\nAlmacenado en pacodbc");
             }
         } finally {
             if (stmt != null) {
