@@ -689,5 +689,35 @@ public class PacodbcDao {
         }
         return false;
     }
+    
+    public String retornaCodigoPaciente(String numero_peticion) {
+        String codigo_paciente = "";
+        String sql = "SELECT cod_pac_cruce FROM pacodbc WHERE (cod_odbc = ?)";
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, numero_peticion);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                codigo_paciente = rs.getString("cod_pac_cruce");
+            }
+        } catch (SQLException ex) {
+            System.out.println("PacienteDao:\n" + ex.toString());
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    if (rs != null) {
+                        rs.close();
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("PacienteDao:\n" + ex.toString());
+                }
+            }
+        }
 
+        return codigo_paciente;
+    }
 }

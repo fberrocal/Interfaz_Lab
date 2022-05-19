@@ -67,11 +67,13 @@ public class Prototipo_servicio_Agilis implements Runnable {
     Paciente_consecutivo pacienteconsecutivo;
     PacienteDao gPaciente;
     Paciente paciente;
+    Paciente pacienteAux;
     Paciente_Adicionales pacAdicionales;
     Paciente_adicionalesDao gPacAdicionales;
     Eventos_paciente_examDao gEventos_paciente_exam;
     Eventos_paciente_exam eventos_paciente_exam;
     medicosDao medicos;
+    ClientesDao clientes;
     controladorBD_generico objetoBD;
     IntercambiosDao gIntercambios;
     DefaultTableModel modeloT;
@@ -84,7 +86,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
     Time horaAct, hora;
     int dif_en_dias, rest, meses, edad;
     String medida_edad;
-    String cod_medico, nom_medico, docPaciente, piso, direccion, pacAdicionalEps;
+    String cod_medico, nom_medico, docPaciente, piso, direccion, pacAdicionalEps, codigoCliente;
     String codSede;
     ReproductorAlarma ra;
     long consecutivo,prefijo;
@@ -122,6 +124,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
         eventos_paciente_exam = new Eventos_paciente_exam();
         gEventos_paciente_exam = new Eventos_paciente_examDao();
         medicos = new medicosDao();
+        clientes = new ClientesDao();
         objetoBD = new controladorBD_generico();
         infoConn = new DatosConexion();
         infoConn.datoLabxDias();
@@ -379,9 +382,13 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     
                                     gPaciente.setConn(cwinsislab.getCon());
                                     if (!(gPaciente.existePaciente(consecutivo_orden, fechaOrden, codSede))) {    
+                                        // Se valida la información del Médico
                                         medicos.setConn(cwinsislab.getCon());
                                         
                                         if (labo_ord.getCOD_MEDICO().equals("") || labo_ord.getCOD_MEDICO() == null) {
+                                            cod_medico = "NA";
+                                            nom_medico = "NO DEFINIDO";
+                                        } else {
                                             if (medicos.existe_medico(labo_ord.getCOD_MEDICO())) {
                                                 cod_medico = labo_ord.getCOD_MEDICO();
                                                 nom_medico = labo_ord.getNOM_MEDICO();
@@ -389,9 +396,19 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                                 cod_medico = "NA";
                                                 nom_medico = "NO DEFINIDO";
                                             }
+                                        }
+                                        
+                                        // See valida la información de la Aseguradora
+                                        clientes.setConn(cwinsislab.getCon());
+                                        
+                                        if (labo_ord.getCOD_CLIENTE().equals("") || labo_ord.getCOD_CLIENTE() == null) {
+                                            codigoCliente = "1";
                                         } else {
-                                            cod_medico = "NA";
-                                            nom_medico = "NO DEFINIDO";
+                                            if (clientes.existe_cliente(labo_ord.getCOD_CLIENTE())) {
+                                                codigoCliente = labo_ord.getCOD_CLIENTE();
+                                            } else {
+                                                codigoCliente = "1";
+                                            }
                                         }
                                         
                                         if (!(objetoBD.existeCiudad(cwinsislab.getCon(), labo_ord.getCOD_CIUDAD()))) {
@@ -407,27 +424,29 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         
                                         procede="";
                                         if(labo_ord.getCOD_CENCOS().equals("10")){
-                                            procede = "2";
+                                            // procede = "2";
+                                            procede = "A";
                                         }else{
-                                            procede = "1";
+                                            // procede = "1";
+                                            procede = "H";
                                         }                                        
                                         
                                         paciente.setAll(
                                                 consecutivo_orden, hora, fechaOrden, codSede, docPaciente, labo_ord.getTIPO_DOC().toUpperCase(), docPaciente,
                                                 "", false, "NA", labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), "NA", true,
                                                 fechaOrden, fechaOrden, hora, hora, codSede, codSede, direccion, labo_ord.getTELEFONO(), cod_medico,
-                                                nom_medico, labo_ord.getEMAIL(), procede, nacio, anios, medida_edad, labo_ord.getSEXO(), labo_ord.getPISO(),
+                                                nom_medico, labo_ord.getEMAIL(), codigoCliente, nacio, anios, medida_edad, labo_ord.getSEXO(), labo_ord.getPISO(),
                                                 labo_ord.getCOD_CENCOS(), null, null, false, "1", null, 0, 0, 0, 0, "IMAT", 0, 0, 0, 0, 0, null, null, labo_ord.getNUM_ORDEN(),
                                                 null, labo_ord.getNOADMISION(), labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, null, labo_ord.getNUM_ORDEN(),
                                                 null, null, "", null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false, false, false, false, false, false, false, false, true, false, false, false,
-                                                false, false, false, false, false, false, false, false, false, false, false, null, "", null, "", null, "1", null, "NA", fechaAct, horaAct,
+                                                false, false, false, false, false, false, false, false, false, false, false, null, "", null, "", null, "1", procede, "NA", fechaAct, horaAct,
                                                 null, null, null, null);
                                         gPaciente.create(paciente);
                                     }
                                     
                                     p.setAll(labo_ord.getNUM_ORDEN(), labo_ord.getTIPO_DOC().toUpperCase(), docPaciente, labo_ord.getNOADMISION(), null, null, hora, fechaOrden, docPaciente, false, null,
                                             labo_ord.getAPELLIDO1() + " " + labo_ord.getAPELLIDO2(), labo_ord.getNOMBRE1() + " " + labo_ord.getNOMBRE2(), null, true, direccion, labo_ord.getTELEFONO(), labo_ord.getCOD_MEDICO(),
-                                            labo_ord.getNOM_MEDICO(), labo_ord.getEMAIL(),"1", labo_ord.getNOM_CLIENTE(), nacio, labo_ord.getSEXO(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "", 0, 0, "",
+                                            labo_ord.getNOM_MEDICO(), labo_ord.getEMAIL(), codigoCliente, labo_ord.getNOM_CLIENTE(), nacio, labo_ord.getSEXO(), labo_ord.getCOD_CENCOS(), labo_ord.getNOM_CENCOS(), "", 0, 0, "",
                                             labo_ord.getCOD_CIUDAD(), labo_ord.getCOD_ZONA(), null, null, null, 0, 0, 0, 0, null, null, labo_ord.getCELULAR(), piso, null, fechaOrden,
                                             hora, fechaAct, horaAct, "1", codSede, consecutivo_orden, true);
                                     gPacodbc.setConn(cwinsislab.getCon());
@@ -440,10 +459,30 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     
                                     n_peticion = labo_ord.getNUM_PETICION();
                                     guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
-                                
                                 } else {
-                                    n_peticion = labo_ord.getNUM_PETICION();
-                                    guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+                                    consecutivo_orden = gPacodbc.retornaCodigoPaciente(labo_ord.getNUM_ORDEN());
+                                    consecutivo_orden = consecutivo_orden.trim();
+                                    if (!consecutivo_orden.equals("")) {
+                                        pacienteAux = null;
+                                        gPaciente.setConn(cwinsislab.getCon());
+                                        pacienteAux = gPaciente.getObject(consecutivo_orden);
+                                        
+                                        if (!(pacienteAux == null)) {
+                                            codSede = pacienteAux.getSede_codigo();
+                                            fechaOrden = pacienteAux.getFecha();
+                                            hora = pacienteAux.getHora();
+                                            año = fechaSys.get(Calendar.YEAR);
+                                            mes = fechaSys.get(Calendar.MONTH) + 1;
+                                            dia = fechaSys.get(Calendar.DAY_OF_MONTH);
+                                            hor = fechaSys.get(Calendar.HOUR_OF_DAY);
+                                            minuto = fechaSys.get(Calendar.MINUTE);
+                                            segundo = fechaSys.get(Calendar.SECOND);
+                                            fechaAct = java.sql.Date.valueOf(año + "-" + mes + "-" + dia);
+                                            n_peticion = labo_ord.getNUM_PETICION();
+                                            horaAct = Time.valueOf(hor + ":" + minuto + ":" + segundo);
+                                            guardarDetalles(labo_ord, cagilis, cwinsislab, docPaciente, codSede, n_peticion);
+                                        }
+                                    }
                                 }
                                 actualizarBarraDeEstado("Agilis: Registros enviados a Winsislab");
                             }
@@ -600,9 +639,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                 gpacodbc_det.setConn(cwinsislab.getCon());
                 gpacodbc_det.create(pacodbc_det);
                 
+                // Inicia código de validación del cruce de solicitud de exámenes
                 try {
                     if (gPacodbc.fueTrasladada(obj.getNUM_ORDEN())) {
-
+                        gPaciente.setConn(cwinsislab.getCon());
                         if (gPaciente.existePaciente(consecutivo_orden, fechaOrden, cSede)) { 
                             if (gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia, cSede)) {
                                 obj.setESTADO(1);
@@ -639,6 +679,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                         }
 
                         // Eliminar el paciente y sus detalles:
+                        gPaciente.setConn(cwinsislab.getCon());
                         if (gPaciente.existePaciente(consecutivo_orden, fechaOrden, cSede)) {
                             if (gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia, cSede)) {
                                 paciente_examenes.setPaciente_cod(consecutivo_orden);
@@ -662,11 +703,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                     } 
                 } catch (NotFoundException ex) {
                     Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, null, ex);
-                } 
-                // Fin código de validación de envío de información a Winsislab
-                
+                }
+                // Finaliza código de validación del cruce de solicitud de exámenes
             } else {
-                
+                gPaciente.setConn(cwinsislab.getCon());
                 if (gPaciente.existePaciente(consecutivo_orden, fechaOrden, cSede)) {
 
                     if (!(gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia, cSede))) {

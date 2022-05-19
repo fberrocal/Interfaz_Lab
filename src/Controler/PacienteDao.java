@@ -62,7 +62,7 @@ public class PacienteDao {
             throw new NotFoundException("PacienteDao:\nCan not select without Primary-Key!");
         }
 
-        String sql = "SELECT * FROM paciente WHERE (paciente_cod = ? ) ";
+        String sql = "SELECT * FROM paciente WHERE (paciente_cod = ?)";
         PreparedStatement stmt = null;
 
         try {
