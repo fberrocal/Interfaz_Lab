@@ -187,11 +187,11 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             hei.setConn(cwinsislab.getCon());
                                 
                             if ( String.valueOf( hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()) ).equals("")) {
-                                actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
+                                actualizarBarraDeEstado("Agilis: No se encontró ID alterna en Winsislab (1)");
                             } else if ( String.valueOf( hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()) ).equals("")) {
-                                actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
+                                actualizarBarraDeEstado("Agilis: No se encontró Código Winsislab (2)");
                             } else if (!(hei.existeIdWinsislab(hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN())))) {
-                                actualizarBarraDeEstado("Agilis: Registros pendientes por trasladas a Winsislab");
+                                actualizarBarraDeEstado("Agilis: No se encontró ID Winsislab (3)");
                             } else {
                                 gPacodbc.setConn(cwinsislab.getCon());
                                 if (gPacodbc.fueTrasladada(labo_ord.getNUM_ORDEN())) {
@@ -214,7 +214,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     }		
 
                                     gPaciente_examenes.setConn(cwinsislab.getCon());
-                                    if (!(gPaciente_examenes.existe_paciente_examenes(cortaCadena(p.getCod_pac_cruce()), 
+                                    if (!(gPaciente_examenes.existe_paciente_examenes(cortaCadena(p.getCod_pac_cruce()),
                                                     fechaOrden, id_examen_winsis, n_peticion, codSede))) {
                                         fac         = 0;
                                         v_ctrl      = 0;
@@ -251,10 +251,10 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     }
                                     
                                 } else {
-                                    fac         = 0;
-                                    v_ctrl      = 0;
+                                    fac = 0;
+                                    v_ctrl = 0;
                                     cantidadExa = labo_ord.getCANTIDAD();
-                                    factor1     = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
+                                    factor1 = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
                                     
                                     while(v_ctrl < cantidadExa){   
                                         if(fac == 0) {
@@ -655,7 +655,6 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     gpacodbc_det.delete(pacodbc_det);
                                 }
                             }
-
                         } else {
                                 // Eliminar pacodbc_det
                             if (gpacodbc_det.existeDetalle(obj.getNUM_ORDEN(), obj.getCOD_EXAMEN(), String.valueOf(secuencia))) {
@@ -668,9 +667,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                 p.setCod_odbc(obj.getNUM_ORDEN());
                                 gPacodbc.delete(p);
                             }
-
                         }		
-
                     } else {
                         // Eliminar pacodbc_det:
                         if (gpacodbc_det.existeDetalle(obj.getNUM_ORDEN(), obj.getCOD_EXAMEN(), String.valueOf(secuencia))) {
@@ -708,9 +705,15 @@ public class Prototipo_servicio_Agilis implements Runnable {
             } else {
                 gPaciente.setConn(cwinsislab.getCon());
                 if (gPaciente.existePaciente(consecutivo_orden, fechaOrden, cSede)) {
+                    hei.setConn(cwinsislab.getCon());
+                    id_examen_winsis = hei.retornaCodigoWinsisLab(obj.getCOD_EXAMEN());
 
                     if (!(gPaciente_examenes.existe_paciente_examenes(consecutivo_orden, fechaOrden, id_examen_winsis, secuencia, cSede))) {
                         double precio;
+                        
+                        gDet_tarifa.setConn(cwinsislab.getCon());
+                        gDet_tarifa.valorTarifa(id_examen_winsis);
+                        
                         precio = gDet_tarifa.getPrecio();
                         // <-- SE ALMACENA EN LA TABLA PACIENTE_EXAMENES
                         paciente_examenes.setAll(                                                                                                           
