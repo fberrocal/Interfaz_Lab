@@ -100,6 +100,12 @@ public class Prototipo_servicio_Agilis implements Runnable {
     
     String procede;
     
+    String last_num_orden;      // Solución bug en envío de órdenes a Winsislab
+    String last_codigo_lab;
+    int last_nro_peticion;
+    String last_num_orden_enlab;
+    int last_nro_peticion_enlab;
+    
     @Override
     public void run() {
         gCcosto = new Centro_costoDao();
@@ -154,6 +160,12 @@ public class Prototipo_servicio_Agilis implements Runnable {
                     infoConn.datoLabxDias();
                     diasLab         = infoConn.getDiasLab();
                     
+                    last_num_orden    = "";
+                    last_codigo_lab   = "";
+                    last_nro_peticion = 0;
+                    last_num_orden_enlab = "";
+                    last_nro_peticion_enlab = 0;
+                    
                     setProgress(10);
                     if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {
                         infoConn.datosConexionWinsislab();
@@ -185,7 +197,7 @@ public class Prototipo_servicio_Agilis implements Runnable {
                             }
                             labo_ord = (LABO_ORD) i.next();
                             hei.setConn(cwinsislab.getCon());
-                                
+
                             if ( String.valueOf( hei.retornaIdAlterna(labo_ord.getCOD_EXAMEN()) ).equals("")) {
                                 actualizarBarraDeEstado("Agilis: No se encontró ID alterna en Winsislab (1)");
                             } else if ( String.valueOf( hei.retornaCodigoWinsisLab(labo_ord.getCOD_EXAMEN()) ).equals("")) {
@@ -211,16 +223,22 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                         Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE,
                                                          "Error, el código de sede no existe " + ex.toString(), ex);
                                         System.out.println("Error, el código de sede no existe:\n" + ex.getMessage());
-                                    }		
+                                    }
 
                                     gPaciente_examenes.setConn(cwinsislab.getCon());
-                                    if (!(gPaciente_examenes.existe_paciente_examenes(cortaCadena(p.getCod_pac_cruce()),
-                                                    fechaOrden, id_examen_winsis, n_peticion, codSede))) {
+                                    
+                                    if (!(gPaciente_examenes.existe_paciente_examenes(cortaCadena(p.getCod_pac_cruce()), fechaOrden, id_examen_winsis, n_peticion, codSede))) {
+                                        
                                         fac         = 0;
                                         v_ctrl      = 0;
                                         cantidadExa = labo_ord.getCANTIDAD();
-                                        factor1     = gPaciente_examenes.get_max_RegExam(cortaCadena(p.getCod_pac_cruce()));
-
+                                        
+                                        if (labo_ord.getNUM_ORDEN().equals(last_num_orden_enlab)) {
+                                            factor1 = last_nro_peticion_enlab;
+                                        } else {
+                                            factor1 = gPaciente_examenes.get_max_RegExam(cortaCadena(p.getCod_pac_cruce()));
+                                        }
+                                        
                                         while(v_ctrl < cantidadExa){   
                                             if(fac == 0) {
                                                 labo_ord.setNUM_PETICION(factor1+1);
@@ -237,7 +255,9 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                             v_ctrl = v_ctrl + 1;
                                         }
 
-                                        v_ctrl = 0;
+                                        v_ctrl                  = 0;
+                                        last_num_orden_enlab    = labo_ord.getNUM_ORDEN();
+                                        last_nro_peticion_enlab = factor1;
                                         
                                     } else {
                                         try {
@@ -251,12 +271,17 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                     }
                                     
                                 } else {
-                                    fac = 0;
-                                    v_ctrl = 0;
+                                    fac         = 0;
+                                    v_ctrl      = 0;
                                     cantidadExa = labo_ord.getCANTIDAD();
-                                    factor1 = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
                                     
-                                    while(v_ctrl < cantidadExa){   
+                                    if (labo_ord.getNUM_ORDEN().equals(last_num_orden)) {
+                                        factor1 = last_nro_peticion;
+                                    } else {
+                                        factor1 = gLabo_ord.getMayPeticion(labo_ord.getNUM_ORDEN());
+                                    }
+                                    
+                                    while(v_ctrl < cantidadExa){
                                         if(fac == 0) {
                                             paraEnviar.add(labo_ord);
                                         } else {
@@ -265,10 +290,14 @@ public class Prototipo_servicio_Agilis implements Runnable {
                                             paraEnviar.add(copia_lab);
                                             factor1 = factor1 + 1;
                                         }
-                                        fac = fac + 1;
+                                        fac    = fac + 1;
                                         v_ctrl = v_ctrl + 1;
                                     }
-                                    v_ctrl = 0;
+                                    
+                                    v_ctrl            = 0;
+                                    last_num_orden    = labo_ord.getNUM_ORDEN();
+                                    last_codigo_lab   = labo_ord.getCOD_EXAMEN();
+                                    last_nro_peticion = factor1;
                                 }
                             }
                         }
@@ -799,17 +828,23 @@ public class Prototipo_servicio_Agilis implements Runnable {
         }
     }
     
+    /*
+        Set the value to the Status Bar
+    */
     private void setProgress(int percent) {
         //SwingUtilities.invokeLater(() -> {
-            Prueba1.pb_Agilis.setValue(percent);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        Prueba1.pb_Agilis.setValue(percent);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Prototipo_servicio_Agilis.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //});
     }
 
+    /*
+        Take off the space characters from a String variable
+    */
     public String cortaCadena(String cad) {
         String cedPaciente = "";
         for (int vCont = 0; vCont < cad.length(); vCont++) {
@@ -820,18 +855,27 @@ public class Prototipo_servicio_Agilis implements Runnable {
         return cedPaciente;
     }
 
+    /*
+        Update the caption of the Status Bar
+    */
     public void actualizarBarraDeEstado(String msg) {
         SwingUtilities.invokeLater(() -> {
             Prueba1.statusLabel.setText(msg);
         });
     }
 
+    /*
+        Press button event
+    */
     public void presionarBoton() {
         SwingUtilities.invokeLater(() -> {
             Prueba1.btn_actTablaNoHomo.doClick();
         });
     }
     
+    /*
+        Set the list date
+    */
     private String fechaListado() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new java.util.Date());

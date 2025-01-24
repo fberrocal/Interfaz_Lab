@@ -107,7 +107,7 @@ public class LABO_RESDao {
             stmt.setString(13, valueObject.getUNIDADES());
             stmt.setString(14, valueObject.getUSU_VALIDA());
             stmt.setInt(15, valueObject.getESTADO());
-
+                              
             int rowcount = databaseUpdate(stmt);
             if (rowcount != 1) {
                 //System.out.println("PrimaryKey Error when updating DB!");

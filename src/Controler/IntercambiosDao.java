@@ -367,7 +367,14 @@ public class IntercambiosDao {
     //Se buscan en intercambio los registros que están pendientes por pasar a Agilis (Tabla LABO_RES)
     protected ArrayList pendientes(Connection c, String sql) throws SQLException {
         ArrayList searchResults = new ArrayList(); //En este array se retornan los registros devueltos
-        ResultSet result = null; //Registros que resultan al ejecutar el query 
+        ResultSet result = null; //Registros que resultan al ejecutar el query
+        
+        /*
+        System.out.println("PROCESANDO RESULTADOS ");
+        System.out.println("SQL: " + sql);
+        System.out.println("----------------------------------");
+        */                    
+
         try {
             result = c.createStatement().executeQuery(sql);
             while (result.next()) {
@@ -392,10 +399,10 @@ public class IntercambiosDao {
         return searchResults;
     }
 
-    public void CambiarEstado(Connection c, Intercambios valueObject)
+    public void CambiarEstado(Connection c, Intercambios valueObject, String tablasp)
             throws NotFoundException, SQLException {
         String sql = "UPDATE intercambios SET estado8=?"
-                + " WHERE sede_origen=? and proceso=? and cod_tabla='090' and llave1=? and llave2=? and llave3=?"
+                + " WHERE sede_origen=? and proceso=? and cod_tabla IN ("+tablasp+") and llave1=? and llave2=? and llave3=?"
                 + " and llave4=? and llave5=? and estado8=FALSE and fecha = ?::timestamp";
         PreparedStatement stmt = null;
         try {
@@ -420,6 +427,9 @@ public class IntercambiosDao {
             if (rowcount > 1) {
                 //System.out.println("PrimaryKey Error when updating DB! (Many objects were affected!)");
                 throw new SQLException("IntercambiosDao:\nPrimaryKey Error when updating DB! (Many objects were affected!)");
+            } else {
+                /* System.out.println("CAMBIAMOS EL ESTADO EN INTERCAMBIOS: " + valueObject.getLlave2()); 
+                System.out.println("----------------------------------"); */
             }
         } finally {
             if (stmt != null) {

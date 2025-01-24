@@ -41,7 +41,7 @@ public class PacienteDao {
         try {
             this.conn.close();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.getMessage());
+            JOptionPane.showMessageDialog(null, "PacienteDao (procedure: desconectar):\n" + ex.getMessage());
         }
     }
 
@@ -59,7 +59,7 @@ public class PacienteDao {
     public void load(Paciente valueObject) throws NotFoundException, SQLException {
 
         if (valueObject.getPaciente_cod() == null) {
-            throw new NotFoundException("PacienteDao:\nCan not select without Primary-Key!");
+            throw new NotFoundException("PacienteDao (procedure load):\n Valor Primary-Key no vAlido o vacIo!");
         }
 
         String sql = "SELECT * FROM paciente WHERE (paciente_cod = ?)";
@@ -244,7 +244,7 @@ public class PacienteDao {
             int rowcount = databaseUpdate(stmt);
             if (rowcount != 1) {
                 //System.out.println("PrimaryKey Error when updating DB!");
-                throw new SQLException("PacienteDao:\nPrimaryKey Error when updating DB!");
+                throw new SQLException("PacienteDao (procedure create):\n Error al crear el registro!");
             }
         } finally {
             if (stmt != null) {
@@ -416,11 +416,11 @@ public class PacienteDao {
             int rowcount = databaseUpdate(stmt);
             if (rowcount == 0) {
                 //System.out.println("Object could not be saved! (PrimaryKey not found)");
-                throw new NotFoundException("PacienteDao:\nObject could not be saved! (PrimaryKey not found)");
+                throw new NotFoundException("PacienteDao (procedure save): \n Registro no actualizado");
             }
             if (rowcount > 1) {
                 //System.out.println("PrimaryKey Error when updating DB! (Many objects were affected!)");
-                throw new SQLException("PacienteDao:\nPrimaryKey Error when updating DB! (Many objects were affected!)");
+                throw new SQLException("PacienteDao (procedure save): \n Error atualizando el registro en BD");
             }
         } finally {
             if (stmt != null) {
@@ -445,11 +445,11 @@ public class PacienteDao {
             int rowcount = databaseUpdate(stmt);
             if (rowcount == 0) {
                 //System.out.println("Object could not be deleted (PrimaryKey not found)");
-                throw new NotFoundException("PacienteDao:\nEl objeto no pudo ser eliminado! (PrimaryKey not found)");
+                throw new NotFoundException("PacienteDao (procedure delete):\n El objeto no pudo ser eliminado! (PrimaryKey not found)");
             }
             if (rowcount > 1) {
                 //System.out.println("PrimaryKey Error when updating DB! (Many objects were deleted!)");
-                throw new SQLException("PacienteDao:\nError de claves primarias! (Many objects were deleted!)");
+                throw new SQLException("PacienteDao (procedure delete):\n Error de claves primarias! (Many objects were deleted!)");
             }
         } finally {
             if (stmt != null) {
@@ -631,7 +631,7 @@ public class PacienteDao {
 
             } else {
                 //System.out.println("Paciente Object Not Found!");
-                throw new NotFoundException("PacienteDao:\nPaciente Object Not Found!");
+                throw new NotFoundException("PacienteDao (procedure singlequery):\n No se encontró el paciente!");
             }
         } finally {
             if (result != null) {
@@ -795,7 +795,7 @@ public class PacienteDao {
      * @return
      */
     public boolean existePaciente(String idpaciente, java.util.Date fecha, String sedecodigo) {
-        String sql = "SELECT * FROM paciente WHERE paciente_cod=? AND fecha=? AND sede_codigo=?";
+        String sql = "SELECT * FROM paciente WHERE paciente_cod=? AND fecha=? ::date AND sede_codigo=?";
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -808,14 +808,14 @@ public class PacienteDao {
                 return true;
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            JOptionPane.showMessageDialog(null, "PacienteDao (procedure existePaciente):\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
                     //rs.close();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    JOptionPane.showMessageDialog(null, "PacienteDao (procedure existePaciente):\n" + ex.toString());
                 }
             }
         }
@@ -826,7 +826,7 @@ public class PacienteDao {
 
         String cod_enla3 = null;
 
-        String sql = "SELECT cod_enla3 FROM paciente WHERE paciente_cod=? and fecha >= ?::date";
+        String sql = "SELECT cod_enla3 FROM paciente WHERE paciente_cod=? and fecha >= ? ::date";
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
@@ -844,7 +844,7 @@ public class PacienteDao {
             }
         } catch (SQLException ex) {
             // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
-            System.out.println("PacienteDao:\n" + ex.toString());
+            System.out.println("PacienteDao (procedure retornaCodigoPaciente):\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
@@ -854,7 +854,7 @@ public class PacienteDao {
                     }
                 } catch (SQLException ex) {
                     // JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
-                    System.out.println("PacienteDao:\n" + ex.toString());
+                    System.out.println("PacienteDao (procedure retornaCodigoPaciente):\n" + ex.toString());
                 }
             }
         }
@@ -864,7 +864,7 @@ public class PacienteDao {
 
     //Si existe el registro con el código del paciente para actualizar el consecutivo
     public boolean existeCodPaciente(String paciente_cod, int numeroDias) {
-        String sql = "SELECT * FROM paciente WHERE paciente_cod=? and fecha >= ?::date";
+        String sql = "SELECT * FROM paciente WHERE paciente_cod=? and fecha >= ? ::date";
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -876,14 +876,14 @@ public class PacienteDao {
                 return true;
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Error al ejecutar select sobre la\ntabla Paciente de la Bd Winsislab:\n" + ex.toString());
+            JOptionPane.showMessageDialog(null, "(existeCodPaciente) Error al ejecutar select sobre la\ntabla Paciente de la Bd Winsislab:\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
                     //rs.close();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "Error al intentar cerrar el statement\nde la tabla Paciente de Winsislab:\n" + ex.toString());
+                    JOptionPane.showMessageDialog(null, "(existeCodPaciente) Error al intentar cerrar el statement\nde la tabla Paciente de Winsislab:\n" + ex.toString());
                 }
             }
         }
@@ -891,7 +891,7 @@ public class PacienteDao {
     }
 
     public String retornaAutorizacionPaciente(Connection c, String idpaciente, int numeroDias) {
-        String sql = "SELECT autorizacion FROM paciente WHERE paciente_cod=? and fecha >= ?::date";
+        String sql = "SELECT autorizacion FROM paciente WHERE paciente_cod=? and fecha >= ? ::date";
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -903,13 +903,13 @@ public class PacienteDao {
                 return rs.getString("autorizacion");
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+            JOptionPane.showMessageDialog(null, "PacienteDao (procedure retornaAutorizacionPaciente):\n" + ex.toString());
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "PacienteDao:\n" + ex.toString());
+                    JOptionPane.showMessageDialog(null, "PacienteDao (procedure retornaAutorizacionPaciente):\n" + ex.toString());
                 }
             }
         }

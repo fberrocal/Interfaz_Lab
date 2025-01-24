@@ -169,8 +169,6 @@ public class PacodbcDao {
             if (rowcount != 1) {
                 //System.out.println("PrimaryKey Error when updating DB!");
                 throw new SQLException("pacodbcDao:\nPrimaryKey Error when updating DB!");
-            } else {
-                //System.out.println("PacodbcDao\nAlmacenado en pacodbc");
             }
         } finally {
             if (stmt != null) {
@@ -662,6 +660,9 @@ public class PacodbcDao {
         return searchResults;
     }
 
+    /*
+        Retorna true si el valor LABO_ORD.NUM_ORDEN ya se encuentra en la tabla [pacodbc]
+    */
     public boolean fueTrasladada(String id) {
         String sql = "SELECT * FROM pacodbc WHERE (cod_odbc = ? )";
         PreparedStatement stmt = null;

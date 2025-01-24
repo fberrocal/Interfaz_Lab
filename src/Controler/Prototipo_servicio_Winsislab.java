@@ -116,6 +116,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                     setProgress(60);
                     if (i.hasNext()) {
                         while (i.hasNext()) {
+                            
                             if (cwinsislab.getCon() == null || cwinsislab.getCon().isClosed()) {
                                 infoConn.datosConexionWinsislab();
                                 cwinsislab = new Conexion(infoConn.getDriver(), "jdbc:postgresql://" + infoConn.getUrl(),
@@ -129,6 +130,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                             
                             intercambios = (Intercambios) i.next();
                             cod_paciente = intercambios.getLlave2();
+                            // setProgress(60);
                             
                             String sql = "select r.examen_cod,r.reg_exa,r.secuencia,r.analito_cod,r.resultado,r.analito,r.minimo,r.intermedio,r.maximo,r.unidades,r.tablav,"
                                     + "pe.validado_por,pa.autorizacion,pa.tipodcto_cod,pa.n_carnet,pe.alterno,pe.nit,pe.nro_muestra1,r.fecha,r.hora,r.paciente_cod,pe.fec_val,pe.hora_val"
@@ -155,6 +157,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                             } else {
                                 objetoBD.ejecutaQuery(stmt);
                                 rs = objetoBD.getRs();
+                                
                                 gPacodbc_det.setConn(cwinsislab.getCon());
                                 if (gPacodbc_det.confirma_examen(intercambios.getLlave4(), intercambios.getLlave5(), gPaciente.retornaCodigoPaciente(intercambios.getLlave2(), diasRes))) {
                                     documentoCliente = gLabo_ord.retornaDocumento(cagilis.getCon(), gPaciente.retornaAutorizacionPaciente(cwinsislab.getCon(), intercambios.getLlave2(), diasRes));
@@ -187,6 +190,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                                     rs.getString("validado_por"), 0);
                                             gLabo_res.setConn(cagilis.getCon());
                                             gLabo_res.create(labo_res);
+
                                         }
                                     }
 
@@ -230,13 +234,18 @@ public class Prototipo_servicio_Winsislab implements Runnable {
                                     
                                     intercambios.setEstado8(true);
                                     try {
-                                        gIntercambios.CambiarEstado(cwinsislab.getCon(), intercambios);
-                                    } catch (NotFoundException ex) {
+                                        gIntercambios.CambiarEstado(cwinsislab.getCon(), intercambios, tablasResult);
+                                        
+                                      } catch (NotFoundException ex) {
                                         Logger.getLogger(Prototipo_servicio_Winsislab.class.getName()).log(Level.SEVERE, "Error intentando cambiar el estado en la tabla intercambios \n" + ex.toString(), ex);
                                         System.out.print("Error intentando cambiar el estado en la tabla intercambios \n" + ex.getMessage());
                                     }
                                 }
+                                
                                 rs = null;
+                                
+                                //actualizarBarraDeEstado("Winsislab: Finalizando proceso de envio...");
+                                //setProgress(80);
                                 actualizarBarraDeEstado("Winsislab: Resultados de Laboratorio enviados a Clintos");
                             }
                         }
@@ -307,7 +316,7 @@ public class Prototipo_servicio_Winsislab implements Runnable {
     public void cambiarEstadoResultado(Intercambios registroRes, boolean estado) {
         registroRes.setEstado8(estado);
         try {
-            gIntercambios.CambiarEstado(cwinsislab.getCon(), registroRes);
+            gIntercambios.CambiarEstado(cwinsislab.getCon(), registroRes, this.tablasResult);
         } catch (NotFoundException ex) {
             Logger.getLogger(Prototipo_servicio_Winsislab.class.getName()).log(Level.SEVERE, 
                              "Se ha lanzado un [NotFoundException] intentando cambiar el estado en la tabla intercambios \n" + ex.toString(), ex);
